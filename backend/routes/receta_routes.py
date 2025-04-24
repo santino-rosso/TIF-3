@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from services.colab_service import generar_receta_desde_colab
 from utils.armar_prompt import armar_prompt  
+from db.guardar_receta import guardar_receta
 
 receta_bp = Blueprint('receta', __name__)
 
@@ -14,6 +15,8 @@ def generar_receta():
         receta_generada = generar_receta_desde_colab(prompt, imagen_base64)
     else:  
         receta_generada = generar_receta_desde_colab(prompt)
+
+    guardar_receta(datos_usuario, receta_generada)
 
     return jsonify({
         "receta_generada": receta_generada
