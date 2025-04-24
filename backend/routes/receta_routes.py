@@ -8,9 +8,12 @@ receta_bp = Blueprint('receta', __name__)
 def generar_receta():
     datos_usuario = request.json
 
-    prompt = armar_prompt(datos_usuario)
+    prompt, imagen_base64 = armar_prompt(datos_usuario)
 
-    receta_generada = generar_receta_desde_colab(prompt)
+    if imagen_base64:
+        receta_generada = generar_receta_desde_colab(prompt, imagen_base64)
+    else:  
+        receta_generada = generar_receta_desde_colab(prompt)
 
     return jsonify({
         "receta_generada": receta_generada

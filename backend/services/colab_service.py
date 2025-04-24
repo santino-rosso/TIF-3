@@ -1,8 +1,11 @@
 import requests
 from config import COLAB_API_URL
 
-def generar_receta_desde_colab(prompt):
+def generar_receta_desde_colab(prompt, imagen_base64=None):
     payload = {"prompt": prompt}
+
+    if imagen_base64:
+        payload["imagen"] = imagen_base64
     
     try:
         respuesta = requests.post(COLAB_API_URL+"/generar_receta", json=payload, verify=False)
