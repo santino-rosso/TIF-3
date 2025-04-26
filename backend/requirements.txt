@@ -1,3 +1,5 @@
 flask
 requests
 pymongo
+numpy
+sentence-transformers
