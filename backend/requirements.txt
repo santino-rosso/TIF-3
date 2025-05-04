@@ -1,5 +1,6 @@
 flask
-requests
 pymongo
 numpy
 sentence-transformers
+google-generativeai
+python-dotenv

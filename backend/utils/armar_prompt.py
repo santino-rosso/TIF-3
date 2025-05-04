@@ -8,11 +8,7 @@ def formato_prompt_generar_receta(datos):
     ingredientes = datos.get("ingredientes", "")
     
     prompt = f"""
-    <|begin_of_text|>
-    <|start_header_id|>system<|end_header_id|>
     Sos un chef profesional y nutricionista. Tu tarea es generar recetas **reales, creativas y detalladas** únicamente a partir de los ingredientes proporcionados por el usuario. No inventes ingredientes, no repitas ni adornes con frases decorativas. Respondé en el formato estricto que se detalla a continuación.
-    <|eot_id|>
-    <|start_header_id|>user<|end_header_id|>
 
     Generá una receta basada en la siguiente información:
 
@@ -56,10 +52,6 @@ def formato_prompt_generar_receta(datos):
 
     **Nivel de experiencia requerido:**
     [nivel sugerido]
-
-    **Fin de la receta.**
-    <|eot_id|>
-    <|start_header_id|>assistant<|end_header_id|>
     """.strip()
 
     return prompt
@@ -67,11 +59,7 @@ def formato_prompt_generar_receta(datos):
 
 def formato_prompt_detectar_ingredientes():
     prompt = """
-    <|begin_of_text|>
-    <|start_header_id|>system<|end_header_id|>
     Sos un experto en cocina y visión artificial. Tu tarea es observar una imagen y listar únicamente los ingredientes que ves de forma precisa. No adivines ingredientes que no estén claros. No agregues frases decorativas ni explicaciones. **Genera la lista de ingredientes una sola vez y detente.**
-    <|eot_id|>
-    <|start_header_id|>user<|end_header_id|>
 
     ⚠️ IMPORTANTE: Listá únicamente ingredientes reconocibles. Cada ingrediente en una línea nueva. Sin numeraciones ni puntos.
     
@@ -80,8 +68,6 @@ def formato_prompt_detectar_ingredientes():
     - ingrediente 2
     - ingrediente 3
     ...
-    <|eot_id|>
-    <|start_header_id|>assistant<|end_header_id|>
     """.strip()
 
     return prompt

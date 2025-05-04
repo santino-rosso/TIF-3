@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
-from services.colab_service import generar_receta_desde_colab, detectar_ingredientes
-from utils.embedding_generator import generar_embedding
+from services.gemini_service import generar_receta_gemini, detectar_ingredientes_gemini
+from services.embedding_service import generar_embedding
 from db.guardar_receta import guardar_receta
 from db.buscar_similares import buscar_recetas_similares
 from utils.receta_serializer import serializar_receta
@@ -10,19 +10,19 @@ receta_bp = Blueprint('receta', __name__)
 
 @receta_bp.route("/generar-receta", methods=["POST"])
 def generar_receta():
-    datos_usuario = request.json
-    imagen_base64 = datos_usuario.get("imagen", None)
+    datos_usuario = request.form.to_dict()
+    imagen_file = request.files['imagen']
 
-    if imagen_base64 is not None:
+    if imagen_file:
         prompt = formato_prompt_detectar_ingredientes()
-        ingredientes_detectados = detectar_ingredientes(prompt, imagen_base64)
+        ingredientes_detectados = detectar_ingredientes_gemini(prompt, imagen_file)
         datos_usuario["ingredientes"] = ingredientes_detectados
         prompt = formato_prompt_generar_receta(datos_usuario)
-        receta_generada = generar_receta_desde_colab(prompt)
+        receta_generada = generar_receta_gemini(prompt)
         print(ingredientes_detectados)
     else:  
         prompt = formato_prompt_generar_receta(datos_usuario)
-        receta_generada = generar_receta_desde_colab(prompt)
+        receta_generada = generar_receta_gemini(prompt)
 
     embedding = generar_embedding(receta_generada)
 
@@ -30,7 +30,7 @@ def generar_receta():
 
     if not recetaDuplicada:
         print("Receta no duplicada, guardando en la base de datos.")
-        guardar_receta(datos_usuario, receta_generada, embedding)
+        guardar_receta(receta_generada, embedding)
 
     recetas_similares_serializados = [serializar_receta(r_s) for r_s in recetas_similares]
 
