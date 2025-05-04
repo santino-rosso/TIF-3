@@ -2,6 +2,7 @@ import google.generativeai as genai
 from PIL import Image
 import os
 from dotenv import load_dotenv
+from io import BytesIO
 
 # Cargar las variables de entorno desde el archivo .env
 load_dotenv()
@@ -17,7 +18,7 @@ genai.configure(api_key=api_key)
 modelo_gemini = genai.GenerativeModel("gemini-2.0-flash-lite")
  
 
-def generar_receta_gemini(prompt):
+async def generar_receta_gemini(prompt):
     try:
         if not prompt:
             return "Error: Debes enviar un prompt"
@@ -29,12 +30,14 @@ def generar_receta_gemini(prompt):
     except Exception as e:
         return f"Error al generar receta: {str(e)}"
 
-def detectar_ingredientes_gemini(prompt=None, imagen_file=None):
+async def detectar_ingredientes_gemini(prompt=None, imagen_file=None):
     try:
         if not prompt or not imagen_file:
             return "Error: Debes enviar texto (prompt) e imagen"
 
-        image = Image.open(imagen_file).convert("RGB")
+        
+        contenido = await imagen_file.read()
+        image = Image.open(BytesIO(contenido)).convert("RGB")
 
         respuesta = modelo_gemini.generate_content([prompt, image])
 

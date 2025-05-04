@@ -1,12 +1,14 @@
-from db.mongo_client import recetas_collection
+from app.db.mongo_client import recetas_collection
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 
-def buscar_recetas_similares(embedding_actual, top_k=3):
+async def buscar_recetas_similares(embedding_actual, top_k=3):
 
     simulitudMaxima = 0.98  # umbral para evitar recetas "casi iguales"
 
-    recetas = list(recetas_collection.find({"embedding": {"$exists": True}}))
+    # Obtener recetas con embeddings existentes
+    recetas_cursor = recetas_collection.find({"embedding": {"$exists": True}})
+    recetas = await recetas_cursor.to_list(length=None)
 
     if not recetas:
         return []

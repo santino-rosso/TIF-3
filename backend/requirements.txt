@@ -1,6 +1,8 @@
-flask
-pymongo
+FastAPI
+uvicorn
+motor
 numpy
 sentence-transformers
 google-generativeai
 python-dotenv
+python-multipart
