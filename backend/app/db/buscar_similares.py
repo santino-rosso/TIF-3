@@ -11,7 +11,7 @@ async def buscar_recetas_similares(embedding_actual, top_k=3):
     recetas = await recetas_cursor.to_list(length=None)
 
     if not recetas:
-        return []
+        return [], False
 
     embeddings_existentes = np.array([r["embedding"] for r in recetas])
     similitudes = cosine_similarity([embedding_actual], embeddings_existentes)[0]

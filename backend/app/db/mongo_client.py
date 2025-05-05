@@ -1,7 +1,7 @@
 from motor.motor_asyncio import AsyncIOMotorClient
-import os
+from app.config import settings
 
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-client = AsyncIOMotorClient(MONGO_URI)
+# Configuración de la conexión a MongoDB
+client = AsyncIOMotorClient(settings.mongo_uri)
 db = client["receya_db"]
 recetas_collection = db["recetas"]
