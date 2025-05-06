@@ -1,6 +1,17 @@
 from app.db.mongo_client import recetas_collection
+from datetime import datetime
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+
+async def guardar_receta(receta_texto, embedding):
+    receta_documento = {
+        "texto_receta": receta_texto,
+        "embedding": embedding,
+        "fecha": datetime.now()
+    }
+    
+    await recetas_collection.insert_one(receta_documento)
+
 
 async def buscar_recetas_similares(embedding_actual, top_k=3):
 
