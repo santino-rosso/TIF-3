@@ -2,17 +2,17 @@ from fastapi import APIRouter, File, UploadFile
 from fastapi.responses import JSONResponse
 from app.services.gemini_service import generar_receta_gemini, detectar_ingredientes_gemini
 from app.services.embedding_service import generar_embedding
-from app.db.guardar_receta import guardar_receta
-from app.db.buscar_similares import buscar_recetas_similares
+from app.db.receta_repository import guardar_receta, buscar_recetas_similares
 from app.utils.receta_serializer import serializar_receta
 from app.utils.prompt_builder import formato_prompt_generar_receta, formato_prompt_detectar_ingredientes
-from app.models.receta import DatosReceta
+from app.models.receta_model import DatosReceta
 from fastapi import Depends
+from app.services.auth_service import get_current_user
 
 router = APIRouter()
 
 @router.post("/generar-receta")
-async def generar_receta(datos_receta: DatosReceta = Depends(), imagen: UploadFile = File(None)):
+async def generar_receta(datos_receta: DatosReceta = Depends(), imagen: UploadFile = File(None), current_user: dict = Depends(get_current_user)):
     
     if not datos_receta.ingredientes and not imagen:
         return JSONResponse(content={"error": "Se debe proporcionar al menos ingredientes o una imagen de los mismos."}, status_code=400)
