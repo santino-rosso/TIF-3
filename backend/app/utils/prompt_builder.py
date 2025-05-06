@@ -1,4 +1,4 @@
-from app.models.receta import DatosReceta
+from app.models.receta_model import DatosReceta
 
 def formato_prompt_generar_receta(datos: DatosReceta) -> str:
     preferencias = datos.preferencias
