@@ -35,3 +35,5 @@ class UserPublic(BaseModel):
     email: EmailStr
     favoritos: List[dict] = []  
 
+class UserLogout(BaseModel):
+    refresh_token: str

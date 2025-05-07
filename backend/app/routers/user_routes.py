@@ -1,14 +1,15 @@
 from fastapi import APIRouter, HTTPException, Depends, Form
 from app.services.auth_service import hash_password, verify_password, create_access_token, get_current_user, create_refresh_token, refresh_access_token
 from app.db.user_repository import get_user_by_email, create_user, update_user_password, delete_user_by_email
-from app.models.usuario_model import UserCreate, UserUpdatePassword, UserPublic, UserDB
+from app.models.usuario_model import UserCreate, UserUpdatePassword, UserPublic, UserDB, UserLogout
 from fastapi.security import OAuth2PasswordRequestForm
 from app.utils.receta_serializer import serializar_receta
 from app.db.user_repository import obtener_favoritos
+from app.db.token_repository import eliminar_refresh_token_de_usuario, guardar_refresh_token
 
 router = APIRouter()
 
-# Crear usuario (Registro)
+# Crear usuario
 @router.post("/register", response_model=dict)
 async def register_user(usuario: UserCreate):
     existing = await get_user_by_email(usuario.email)
@@ -33,7 +34,10 @@ async def login_user(usuario: OAuth2PasswordRequestForm = Depends()):
         raise HTTPException(status_code=401, detail="Contraseña incorrecta")
 
     access_token = create_access_token(data={"sub": db_usario.email})
-    refresh_token = create_refresh_token(data={"sub": db_usario.email})
+    refresh_token, created_at = create_refresh_token(data={"sub": db_usario.email})
+
+    # Guardar el refresh token en la base de datos
+    await guardar_refresh_token(email=db_usario.email, refresh_token=refresh_token, created_at=created_at)
 
     return {
         "access_token": access_token,
@@ -75,9 +79,19 @@ async def delete_user(current_user: dict = Depends(get_current_user)):
 
 # Refresh token
 @router.post("/refresh", response_model=dict)
-async def refresh_token(refresh_token: str = Form(...)):
-    new_token = refresh_access_token(refresh_token)
+async def refresh_token(request: UserLogout):
+    new_token = await refresh_access_token(request.refresh_token)
     return {
         "access_token": new_token,
         "token_type": "bearer"
     }
+
+# Logout
+@router.post("/logout")
+async def logout(request: UserLogout, current_user: dict = Depends(get_current_user)):
+    eliminado = await eliminar_refresh_token_de_usuario(email=current_user["email"], refresh_token=request.refresh_token)
+
+    if not eliminado:
+        raise HTTPException(status_code=404, detail="Token inválido o ya eliminado")
+
+    return {"message": "Sesión cerrada correctamente"}

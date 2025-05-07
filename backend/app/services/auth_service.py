@@ -5,11 +5,13 @@ from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from app.db.user_repository import get_user_by_email
 from app.config import settings
+from app.db.token_repository import obtener_refresh_token
 
 # Configuración
 SECRET_KEY = settings.secret_key
 ALGORITHM = settings.algorithm
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
+REFRESH_TOKEN_EXPIRE_MINUTES = settings.refresh_token_expire_minutes
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
@@ -28,10 +30,11 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 def create_refresh_token(data: dict):
-    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.refresh_token_expire_minutes)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=REFRESH_TOKEN_EXPIRE_MINUTES)
+    created_at = datetime.now(timezone.utc)
     to_encode = data.copy()
     to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM), created_at
 
 def decode_access_token(token: str):
     try:
@@ -55,14 +58,23 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 
     return user
     
-def refresh_access_token(refresh_token: str) -> str:
+async def refresh_access_token(refresh_token: str) -> str:
     try:
+        # Verificar si el refresh token existe en la base de datos
+        token_db = await obtener_refresh_token(refresh_token)
+        if not token_db:
+            raise HTTPException(status_code=401, detail="Refresh token inválido.")
+
+        # Decodificar el refresh token
         payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get("sub")
         if not email:
             raise ValueError("Email no encontrado en el token")
+        
+        # Crear un nuevo access token
+        new_access_token = create_access_token(data={"sub": email})
+        return new_access_token
+
     except JWTError:
         raise HTTPException(status_code=401, detail="Refresh token inválido.")
     
-    new_access_token = create_access_token(data={"sub": email})
-    return new_access_token

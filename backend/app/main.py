@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from app.routers.receta_routes import router as receta_router
 from app.routers.user_routes import router as user_router
-from app.db.mongo_client import create_index, close_mongo_connection
+from app.db.mongo_client import create_index, close_mongo_connection, crear_index_tokens
 from app.routers.favoritos_routes import router as favoritos_router
 
 
@@ -13,6 +13,7 @@ async def lifespan(app: FastAPI):
     try:
         # Crear índices en la base de datos al iniciar la aplicación
         await create_index()
+        await crear_index_tokens()
         print("Índices creados en la base de datos.")
     except Exception as e:
         print(f"Error al crear índices: {e}")
