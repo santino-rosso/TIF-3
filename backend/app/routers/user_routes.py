@@ -1,8 +1,10 @@
 from fastapi import APIRouter, HTTPException, Depends, Form
 from app.services.auth_service import hash_password, verify_password, create_access_token, get_current_user, create_refresh_token, refresh_access_token
 from app.db.user_repository import get_user_by_email, create_user, update_user_password, delete_user_by_email
-from app.models.usuario_model import UserCreate, UserLogin, UserUpdatePassword, UserPublic, UserDB
+from app.models.usuario_model import UserCreate, UserUpdatePassword, UserPublic, UserDB
 from fastapi.security import OAuth2PasswordRequestForm
+from app.utils.receta_serializer import serializar_receta
+from app.db.user_repository import obtener_favoritos
 
 router = APIRouter()
 
@@ -42,7 +44,12 @@ async def login_user(usuario: OAuth2PasswordRequestForm = Depends()):
 # Leer perfil del usuario autenticado
 @router.get("/read", response_model=UserPublic)
 async def read_user(current_user: dict = Depends(get_current_user)):
-    return {"email": current_user["email"]}
+    recetas = await obtener_favoritos(current_user["email"])  # Obtener recetas completas
+    recetas_serializadas = [serializar_receta(r) for r in recetas]
+    return {
+        "email": current_user["email"],
+        "favoritos": recetas_serializadas
+    }
 
 # Actualizar contraseña
 @router.put("/update", response_model=dict)
