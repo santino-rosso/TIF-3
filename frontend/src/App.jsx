@@ -1,10 +1,13 @@
+import { Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
+import Resultados from "./pages/Resultados";
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <Home />
-    </div>
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/resultados" element={<Resultados />} />
+    </Routes>
   );
 }
 

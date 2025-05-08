@@ -12,7 +12,7 @@ from app.services.auth_service import get_current_user
 router = APIRouter()
 
 @router.post("/generar-receta")
-async def generar_receta(datos_receta: DatosReceta = Depends(), imagen: UploadFile = File(None), current_user: dict = Depends(get_current_user)):
+async def generar_receta(datos_receta: DatosReceta = Depends(), imagen: UploadFile = File(None)):
     
     if not datos_receta.ingredientes and not imagen:
         return JSONResponse(content={"error": "Se debe proporcionar al menos ingredientes o una imagen de los mismos."}, status_code=400)
