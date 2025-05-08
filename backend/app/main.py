@@ -4,6 +4,7 @@ from app.routers.receta_routes import router as receta_router
 from app.routers.user_routes import router as user_router
 from app.db.mongo_client import create_index, close_mongo_connection, crear_index_tokens
 from app.routers.favoritos_routes import router as favoritos_router
+from fastapi.middleware.cors import CORSMiddleware
 
 
 @asynccontextmanager
@@ -31,3 +32,13 @@ app = FastAPI(title="API de Recetas con Gemini", lifespan=lifespan)
 app.include_router(receta_router, prefix="/api", tags=["Recetas"])
 app.include_router(user_router, prefix="/api", tags=["Usuarios"])
 app.include_router(favoritos_router, prefix="/api", tags=["Favoritos"])
+
+# Configuración de CORS
+# Permitir solicitudes desde el frontend en localhost:5173
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
