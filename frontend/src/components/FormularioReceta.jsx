@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axiosInstance from "../utils/axiosInstance";
 
 const FormularioReceta = () => {
   const [modoIngredientes, setModoIngredientes] = useState("imagen"); 
@@ -69,7 +69,7 @@ const FormularioReceta = () => {
     }
 
     try {
-      const res = await axios.post("http://localhost:8000/api/generar-receta", formData);
+      const res = await axiosInstance.post("/generar-receta", formData);
       localStorage.setItem("recetaGenerada", JSON.stringify(res.data));
       navigate("/resultados");
     } catch (err) {

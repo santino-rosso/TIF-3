@@ -4,6 +4,7 @@ import RecetaCard from "../components/RecetaCard";
 
 const Resultados = () => {
   const [receta, setReceta] = useState(null);
+  const [estado, setEstado] = useState("cargando"); // 'cargando' | 'lista' | 'no_encontrada'
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -11,12 +12,23 @@ const Resultados = () => {
     if (recetaGuardada) {
       try {
         const parsedReceta = JSON.parse(recetaGuardada);
-        setReceta(parsedReceta);
+        if (parsedReceta?.receta_generada) {
+          setReceta(parsedReceta);
+          setEstado("lista");
+        } else {
+          setEstado("no_encontrada");
+          setTimeout(() => navigate("/"), 5000);
+        }
       } catch (err) {
         console.error("Error al parsear receta guardada:", err);
+        setEstado("no_encontrada");
+        setTimeout(() => navigate("/"), 5000);
       }
+    } else {
+      setEstado("no_encontrada");
+      setTimeout(() => navigate("/"), 5000);
     }
-  }, []);
+  }, [navigate]);
 
   const handleBorrar = () => {
     localStorage.removeItem("recetaGenerada");
@@ -24,7 +36,7 @@ const Resultados = () => {
   };
 
   // Estado de carga
-  if (!receta) {
+  if (estado === "cargando") {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] p-8">
         <div className="w-16 h-16 border-4 border-t-blue-500 border-blue-200 rounded-full animate-spin mb-4"></div>
@@ -34,15 +46,19 @@ const Resultados = () => {
     );
   }
 
-  // Luego verifica si tiene la propiedad receta_generada
-  if (!receta.receta_generada) {
-    return <div className="text-center mt-10 text-lg">No se ha generado ninguna receta. Vuelva a intentarlo.</div>;
+  // Estado de no encontrada
+  if (estado === "no_encontrada") {
+    return (
+      <div className="flex items-center justify-center h-screen flex-col text-center px-4">
+          <p className="text-lg mb-2">No se ha generado ninguna receta</p>
+          <p className="text-sm text-gray-500">Redirigiendo al inicio para que puedas intentarlo de nuevo...</p>
+      </div>
+    );
   }
 
   return (
     <div className="container mx-auto p-4">
       <RecetaCard receta={receta.receta_generada} similares={receta.recetas_similares} />
-    
       <div className="text-center">
         <button onClick={handleBorrar} className="mt-6 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition">
           Volver al inicio
