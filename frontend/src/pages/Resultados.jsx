@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import RecetaCard from "../components/RecetaCard";
+import Navbar from "../components/Navbar";
 
 const Resultados = () => {
   const [receta, setReceta] = useState(null);
@@ -30,10 +31,6 @@ const Resultados = () => {
     }
   }, [navigate]);
 
-  const handleBorrar = () => {
-    localStorage.removeItem("recetaGenerada");
-    navigate("/"); // Redirige al inicio
-  };
 
   // Estado de carga
   if (estado === "cargando") {
@@ -58,12 +55,8 @@ const Resultados = () => {
 
   return (
     <div className="container mx-auto p-4">
+      <Navbar />
       <RecetaCard receta={receta.receta_generada} similares={receta.recetas_similares} />
-      <div className="text-center">
-        <button onClick={handleBorrar} className="mt-6 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition">
-          Volver al inicio
-        </button>
-      </div>
     </div>
   );
 };
