@@ -4,6 +4,8 @@ import Resultados from "./pages/Resultados";
 import Login from "./pages/Login";
 import PrivateRoute from "./components/PrivateRoute";
 import Register from "./pages/Register";
+import Favoritos from "./pages/Favoritos";
+
 
 function App() {
   return (
@@ -13,6 +15,7 @@ function App() {
       <Route element={<PrivateRoute />}>
         <Route path="/" element={<Home />} />
         <Route path="/resultados" element={<Resultados />} />
+        <Route path="/favoritos" element={<Favoritos />} />
       </Route>
     </Routes>
   );

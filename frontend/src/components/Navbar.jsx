@@ -20,6 +20,10 @@ const Navbar = () => {
         <span className="text-xl font-bold tracking-tight">Rece<span className="text-green-400">Ya</span></span>
       </a>
       
+      <Link to="/favoritos" className="text-sm text-gray-300 hover:text-green-400">
+        ⭐ Favoritos
+      </Link>
+
       <button
         onClick={() => logout(navigate)}
         className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded"
