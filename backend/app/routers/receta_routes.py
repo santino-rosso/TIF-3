@@ -12,7 +12,7 @@ from app.services.auth_service import get_current_user
 router = APIRouter()
 
 @router.post("/generar-receta")
-async def generar_receta(datos_receta: DatosReceta = Depends(), imagen: UploadFile = File(None)):
+async def generar_receta(datos_receta: DatosReceta = Depends(), imagen: UploadFile = File(None), current_user: dict = Depends(get_current_user)):
     
     if not datos_receta.ingredientes and not imagen:
         return JSONResponse(content={"error": "Se debe proporcionar al menos ingredientes o una imagen de los mismos."}, status_code=400)
@@ -46,7 +46,14 @@ async def generar_receta(datos_receta: DatosReceta = Depends(), imagen: UploadFi
 
     if not receta_duplicada:
         print("Receta no duplicada, guardando en la base de datos.")
-        await guardar_receta(receta_generada, embedding)
+        receta_id = await guardar_receta(receta_generada, embedding)
+        receta_generada = {
+            "_id": receta_id,
+            "texto_receta": receta_generada,
+        } 
+    else:
+        print("Receta duplicada, se utilizara la receta existente.")
+        receta_generada = receta_duplicada
 
     recetas_similares_serializadas = [serializar_receta(r) for r in recetas_similares]
 
