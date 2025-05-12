@@ -34,6 +34,9 @@ const Register = () => {
             setPassword={setPassword}
             error={error}
             submitLabel="Crear cuenta"
+            alternativeLink="/login"
+          alternativeLinkText="Iniciar sesión"
+          alternativeLinkLabel="¿Ya tienes una cuenta?"
           />
         </div>
     );

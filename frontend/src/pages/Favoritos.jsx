@@ -41,7 +41,9 @@ const Favoritos = () => {
 
   if (favoritos.length === 0) {
     return (
-      <div className="flex items-center justify-center h-[60vh]">
+      <div className="container mx-auto p-4">
+        <Navbar />
+        <h2 className="text-2xl font-bold text-green-700 mb-4">Tus Recetas Favoritas</h2>
         <p className="text-lg text-gray-600">Aún no tenés recetas guardadas.</p>
       </div>
     );

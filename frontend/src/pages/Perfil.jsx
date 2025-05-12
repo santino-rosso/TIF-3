@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
+import Navbar from "../components/Navbar";
 
 const Perfil = () => {
   const [email, setEmail] = useState("");
@@ -50,6 +51,7 @@ const Perfil = () => {
 
   return (
     <div className="max-w-lg mx-auto mt-10 p-6 bg-white rounded shadow">
+        <Navbar />
       <h2 className="text-2xl font-bold mb-4 text-green-700">Tu Perfil</h2>
 
       <p className="mb-4"><strong>Email:</strong> {email}</p>

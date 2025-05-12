@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
 import AuthForm from "../components/AuthForm";
+import { Link } from "react-router-dom";
+
 
 const Login = () => {
     const navigate = useNavigate();
@@ -41,6 +43,9 @@ const Login = () => {
             setPassword={setPassword}
             error={error}
             submitLabel="Entrar"
+            alternativeLink="/register"
+            alternativeLinkText="Crear cuenta nueva"
+            alternativeLinkLabel="¿No tienes una cuenta?"
           />
         </div>
     );

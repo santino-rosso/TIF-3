@@ -48,11 +48,8 @@ async def login_user(usuario: OAuth2PasswordRequestForm = Depends()):
 # Leer perfil del usuario autenticado
 @router.get("/read", response_model=UserPublic)
 async def read_user(current_user: dict = Depends(get_current_user)):
-    recetas = await obtener_favoritos(current_user["email"])  # Obtener recetas completas
-    recetas_serializadas = [serializar_receta(r) for r in recetas]
     return {
         "email": current_user["email"],
-        "favoritos": recetas_serializadas
     }
 
 # Actualizar contraseña
