@@ -24,6 +24,10 @@ const Navbar = () => {
         ⭐ Favoritos
       </Link>
 
+      <Link to="/perfil" className="text-sm text-gray-300 hover:text-blue-600">
+        👤 Mi Cuenta
+      </Link>
+
       <button
         onClick={() => logout(navigate)}
         className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded"
