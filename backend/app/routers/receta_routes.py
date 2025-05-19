@@ -8,40 +8,68 @@ from app.utils.prompt_builder import formato_prompt_generar_receta, formato_prom
 from app.models.receta_model import DatosReceta
 from fastapi import Depends
 from app.services.auth_service import get_current_user
+from app.kag.validador import validar_ingredientes_con_restricciones
+from fastapi import Form
 
 router = APIRouter()
 
-@router.post("/generar-receta")
-async def generar_receta(datos_receta: DatosReceta = Depends(), imagen: UploadFile = File(None), current_user: dict = Depends(get_current_user)):
-    
-    if not datos_receta.ingredientes and not imagen:
+@router.post("/validar-ingredientes")
+async def validar_ingredientes(restricciones: str = Form(""), ingredientes: str = Form(""), imagen: UploadFile = File(None), current_user: dict = Depends(get_current_user)):
+
+    if not ingredientes and not imagen:
         return JSONResponse(content={"error": "Se debe proporcionar al menos ingredientes o una imagen de los mismos."}, status_code=400)
 
     if imagen:
+        # Detectar ingredientes desde la imagen
         prompt_img = formato_prompt_detectar_ingredientes()
-
         ingredientes_detectados = await detectar_ingredientes_gemini(prompt_img, imagen)
         
         # Verificar si se devolvió un mensaje de error
         if isinstance(ingredientes_detectados, str) and ingredientes_detectados.startswith("Error al identificar ingredientes:"):
-            print(f"Error detectado: {ingredientes_detectados}")
             return JSONResponse(content={"error": ingredientes_detectados}, status_code=500)
 
-        datos_receta.ingredientes = ingredientes_detectados
-        print(f"Ingredientes detectados: {ingredientes_detectados}")
+        ingredientes = ingredientes_detectados
         
+    # Validar restricciones
+    parsed_ingredientes, errores = validar_ingredientes_con_restricciones(ingredientes, restricciones)
+
+    if errores:
+        # Retornar los ingredientes con los errores encontrados 
+        return JSONResponse(content={"ingredientes_no_aprobados": errores, "ingredientes": parsed_ingredientes}, status_code=200)
+    
+    # Si no hay errores, retornar los ingredientes
+    return JSONResponse(content={"ingredientes_validados": parsed_ingredientes}, status_code=200)
+
+@router.post("/generar-receta")
+async def generar_receta(ingredientes: str = Form(""), preferencias: str = Form(""), restricciones: str = Form(""), tiempo: str = Form(""), tipo_comida: str = Form(""), herramientas: str = Form(""), experiencia: str = Form(""), current_user: dict = Depends(get_current_user)):
+   
+    datos_receta = DatosReceta(
+        preferencias=preferencias,
+        restricciones=restricciones,
+        tiempo=tiempo,
+        tipo_comida=tipo_comida,
+        herramientas=herramientas,
+        experiencia=experiencia,
+        ingredientes=ingredientes,  
+    )
+    
+    if not datos_receta.ingredientes :
+        return JSONResponse(content={"error": "No se proporcionaron ingredientes para generar la receta."}, status_code=400)
+
+    # Generar el prompt y la receta
     prompt = formato_prompt_generar_receta(datos_receta)
     receta_generada = await generar_receta_gemini(prompt)
 
     if not receta_generada or not receta_generada.strip():
-        raise ValueError("El texto de la receta está vacío o no es válido.")
+        return JSONResponse(content={"error": "No se pudo generar la receta."}, status_code=500)
 
+    # Generar embedding para la receta
     embedding = generar_embedding(receta_generada)
 
     if not embedding or not isinstance(embedding, list) or len(embedding) == 0:
-        print("Error al generar el embedding.")
         return JSONResponse(content={"error": "Error al generar el embedding."}, status_code=500)
     
+    # Buscar recetas similares en la base de datos
     recetas_similares, receta_duplicada = await buscar_recetas_similares(embedding)
 
     if not receta_duplicada:
@@ -57,7 +85,8 @@ async def generar_receta(datos_receta: DatosReceta = Depends(), imagen: UploadFi
 
     recetas_similares_serializadas = [serializar_receta(r) for r in recetas_similares]
 
+    # Retornar la receta generada y las recetas similares
     return JSONResponse(content={
         "receta_generada": receta_generada,
         "recetas_similares": recetas_similares_serializadas
-    })
+    }, status_code=200)
