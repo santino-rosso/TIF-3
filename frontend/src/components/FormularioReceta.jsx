@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
+import { useValidarIngredientes } from "../utils/useValidarIngredientes";
+import { confirmarIngredientes } from "../utils/confirmarIngredientes.jsx";
 
 const FormularioReceta = () => {
   const [modoIngredientes, setModoIngredientes] = useState("imagen"); 
@@ -17,6 +19,7 @@ const FormularioReceta = () => {
   const [errores, setErrores] = useState([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { validarIngredientes: validarIngredientesHook } = useValidarIngredientes();
 
 
   const handleChange = (e) => {
@@ -55,26 +58,60 @@ const FormularioReceta = () => {
     // Limpiar errores anteriores
     setErrores([]);
 
-    const formData = new FormData();
-    // Campos comunes
-    Object.entries(datos).forEach(([key, value]) => {
-      if (modoIngredientes === "texto" || key !== "ingredientes") {
-        formData.append(key, value);
-      }
-    });
-
-    // Si es imagen, la agregamos
-    if (modoIngredientes === "imagen" && imagen) {
-      formData.append("imagen", imagen);
-    }
-
     try {
-      const res = await axiosInstance.post("/generar-receta", formData);
-      localStorage.setItem("recetaGenerada", JSON.stringify(res.data));
+      const ingredientesRes = await validarIngredientesHook(datos, modoIngredientes, imagen);
+      
+      let ingredientesFinales = "";
+
+      if (ingredientesRes.ingredientes_no_aprobados) {
+        // Mostrar ingredientes no aptos al usuario
+        const confirmados = await confirmarIngredientes(ingredientesRes.ingredientes_no_aprobados);
+        
+        // Filtrar los ingredientes válidos
+        const ingredientesValidos = ingredientesRes.ingredientes.filter(ingrediente => {
+          // Verificar si el ingrediente está en la lista de no aprobados
+          const esNoAprobado = ingredientesRes.ingredientes_no_aprobados.some(
+            ([ingredienteNoAprobado]) => ingredienteNoAprobado === ingrediente
+          );
+          
+          // Si no está en la lista de no aprobados, lo mantenemos
+          if (!esNoAprobado) {
+            return true;
+          }
+          
+          // Si está en la lista de no aprobados, lo mantenemos solo si fue confirmado
+          return confirmados.includes(ingrediente);
+        });
+        
+        // Guardar los ingredientes válidos para usar inmediatamente
+        ingredientesFinales = ingredientesValidos.join(", ");
+      } else {
+        // Si no hay ingredientes no aprobados, guardar los ingredientes directamente
+        ingredientesFinales = ingredientesRes.ingredientes_validados.join(", ");
+      }
+
+      // Actualizar el estado (esto no se refleja inmediatamente)
+      setDatos((prev) => ({ ...prev, ingredientes: ingredientesFinales }));
+
+      // Crear FormData para generar la receta usando los ingredientes filtrados
+      const formDataGenerar = new FormData();
+      // Usar los datos actuales para todos los campos excepto ingredientes
+      Object.entries(datos).forEach(([key, value]) => {
+        if (key !== "ingredientes") {
+          formDataGenerar.append(key, value);
+        }
+      });
+
+      // Añadir los ingredientes filtrados correctamente
+      formDataGenerar.append("ingredientes", ingredientesFinales);
+
+      // Enviar la solicitud para generar la receta
+      const recetaRes = await axiosInstance.post("/generar-receta", formDataGenerar);
+      localStorage.setItem("recetaGenerada", JSON.stringify(recetaRes.data));
       navigate("/resultados");
     } catch (err) {
-      console.error(err);
-      setErrores(["Error al generar la receta. Por favor, intenta nuevamente."]);
+      const mensajeError = err.response?.data?.error || "Error al generar la receta. Por favor, intenta nuevamente.";
+      setErrores([mensajeError]);
     } finally {
       setLoading(false);
     }
