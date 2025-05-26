@@ -83,3 +83,66 @@ def formato_prompt_detectar_ingredientes():
     """.strip()
 
     return prompt
+
+def formato_prompt_validar_receta(receta_texto: str, datos_usuario: DatosReceta) -> str:
+    prompt = f"""
+        Eres un chef profesional y nutricionista experto. 
+        
+        Tu tarea es analizar la receta proporcionada y asegurarte de que cumpla con todos los requisitos del usuario. Si encuentras problemas, 
+        debes ADAPTAR la receta para que se ajuste perfectamente a las necesidades del usuario.
+        
+        ## Receta a analizar:
+        {receta_texto}
+        
+        ## Requisitos del usuario:
+        """
+        
+    # Agregar solo los requisitos que el usuario especificó
+    if datos_usuario.ingredientes and datos_usuario.ingredientes != "desconocido":
+        prompt += f"\n- Ingredientes disponibles: {datos_usuario.ingredientes}"
+    if datos_usuario.preferencias and datos_usuario.preferencias != "desconocido":
+        prompt += f"\n- Preferencias dietéticas: {datos_usuario.preferencias}"
+    if datos_usuario.restricciones and datos_usuario.restricciones != "desconocido":
+        prompt += f"\n- Restricciones alimentarias: {datos_usuario.restricciones}"
+    if datos_usuario.tiempo and datos_usuario.tiempo != "desconocido":
+        prompt += f"\n- Tiempo disponible: {datos_usuario.tiempo} minutos"
+    if datos_usuario.tipo_comida and datos_usuario.tipo_comida != "desconocido":
+        prompt += f"\n- Tipo de comida: {datos_usuario.tipo_comida}"
+    if datos_usuario.herramientas and datos_usuario.herramientas != "desconocido":
+        prompt += f"\n- Herramientas disponibles: {datos_usuario.herramientas}"
+    if datos_usuario.experiencia and datos_usuario.experiencia != "desconocido":
+        prompt += f"\n- Nivel de experiencia: {datos_usuario.experiencia}"
+            
+    prompt += """        
+        ## Instrucciones:
+        1. Analiza si la receta cumple con TODOS los requisitos especificados por el usuario.
+        2. Si detectas problemas (ingredientes no disponibles, restricciones no respetadas, tiempo inadecuado, etc.), 
+           MODIFICA la receta para que cumpla con todos los requisitos.
+        3. No elimines secciones completas innecesariamente.
+        4. No agregues explicaciones, introducciones o emojis adicionales.
+        5. Presta especial atención a:
+            5.1. Usar solo los ingredientes disponibles
+            5.2. Respetar las restricciones alimentarias
+            5.3. Ajustarse a las preferencias dietéticas
+            5.4. Poder prepararse en el tiempo indicado
+            5.5. Requerir solo las herramientas disponibles
+            5.6. Ajustarse al nivel de experiencia indicado
+            5.7. Corresponder con el tipo de comida solicitado
+        6. Mantene el formato exacto de la receta con todas sus secciones, incluyendo:
+            - Nombre de la receta
+            - Ingredientes
+            - Preparación
+            - Preferencias dietéticas
+            - Restricciones alimentarias
+            - Tiempo de cocina necesario
+            - Tipo de comida
+            - Herramientas de cocina utilizadas
+            - Nivel de experiencia requerido
+
+        ## IMPORTANTE: Devolve SOLO la receta final:
+        - Si la receta original ya cumple con todos los requisitos, devolve la misma receta sin cambios.
+        - Si la receta necesita adaptación, devolve la versión adaptada siguiendo el mismo formato.
+        - No incluyas explicaciones adicionales ni comentarios sobre los cambios realizados.
+        """
+    prompt = prompt.strip()
+    return prompt

@@ -35,3 +35,13 @@ async def detectar_ingredientes_gemini(prompt=None, imagen_file=None):
 
     except Exception as e:
         return f"Error al identificar ingredientes: {str(e)}"
+        
+        
+async def validar_y_adaptar_receta_con_gemini(prompt):
+    try:
+        respuesta = modelo_gemini.generate_content([prompt])
+        
+        return respuesta.text
+
+    except Exception as e:
+        return f"Error al validar y adaptar receta: {str(e)}"

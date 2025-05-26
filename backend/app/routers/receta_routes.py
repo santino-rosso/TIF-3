@@ -1,10 +1,10 @@
 from fastapi import APIRouter, File, UploadFile
 from fastapi.responses import JSONResponse
-from app.services.gemini_service import generar_receta_gemini, detectar_ingredientes_gemini
+from app.services.gemini_service import generar_receta_gemini, detectar_ingredientes_gemini, validar_y_adaptar_receta_con_gemini
 from app.services.embedding_service import generar_embedding
 from app.db.receta_repository import guardar_receta, buscar_recetas_similares
 from app.utils.receta_serializer import serializar_receta
-from app.utils.prompt_builder import formato_prompt_generar_receta, formato_prompt_detectar_ingredientes
+from app.utils.prompt_builder import formato_prompt_generar_receta, formato_prompt_detectar_ingredientes, formato_prompt_validar_receta
 from app.models.receta_model import DatosReceta
 from fastapi import Depends
 from app.services.auth_service import get_current_user
@@ -62,9 +62,13 @@ async def generar_receta(ingredientes: str = Form(""), preferencias: str = Form(
 
     if not receta_generada or not receta_generada.strip():
         return JSONResponse(content={"error": "No se pudo generar la receta."}, status_code=500)
-
+        
+    # Validar y adaptar la receta generada para asegurar que cumpla con todos los requisitos
+    prompt_validar = formato_prompt_validar_receta(receta_generada, datos_receta)
+    receta_final = await validar_y_adaptar_receta_con_gemini(prompt_validar)
+    
     # Generar embedding para la receta
-    embedding = generar_embedding(receta_generada)
+    embedding = generar_embedding(receta_final)
 
     if not embedding or not isinstance(embedding, list) or len(embedding) == 0:
         return JSONResponse(content={"error": "Error al generar el embedding."}, status_code=500)
@@ -74,19 +78,19 @@ async def generar_receta(ingredientes: str = Form(""), preferencias: str = Form(
 
     if not receta_duplicada:
         print("Receta no duplicada, guardando en la base de datos.")
-        receta_id = await guardar_receta(receta_generada, embedding)
-        receta_generada = {
+        receta_id = await guardar_receta(receta_final, embedding)
+        receta_generada_obj = {
             "_id": receta_id,
-            "texto_receta": receta_generada,
+            "texto_receta": receta_final,
         } 
     else:
         print("Receta duplicada, se utilizara la receta existente.")
-        receta_generada = receta_duplicada
+        receta_generada_obj = receta_duplicada
 
     recetas_similares_serializadas = [serializar_receta(r) for r in recetas_similares]
 
     # Retornar la receta generada y las recetas similares
     return JSONResponse(content={
-        "receta_generada": receta_generada,
+        "receta_generada": receta_generada_obj,
         "recetas_similares": recetas_similares_serializadas
     }, status_code=200)
