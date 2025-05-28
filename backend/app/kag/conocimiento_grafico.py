@@ -6,7 +6,7 @@ def construir_ontologia_ingredientes():
 
     # Ingredientes comunes que un usuario podría ingresar
     ingredientes_usuario = [
-        "pan", "galletas", "fideos", "leche", "yogur", "salchicha", "helado"
+        "pan", "galletas", "fideos", "leche", "yogur", "salchicha", "helado", "queso"
     ]
 
     # Componentes intermedios
@@ -29,6 +29,7 @@ def construir_ontologia_ingredientes():
     G.add_edge("fideos", "harina de trigo", tipo="contiene")
     G.add_edge("leche", "lactosa", tipo="contiene")
     G.add_edge("yogur", "lactosa", tipo="contiene")
+    G.add_edge("queso", "lactosa", tipo="contiene")
     G.add_edge("salchicha", "conservantes", tipo="contiene")
     G.add_edge("helado", "azúcar", tipo="contiene")
     G.add_edge("helado", "lactosa", tipo="contiene")

@@ -34,11 +34,16 @@ async def validar_ingredientes(restricciones: str = Form(""), ingredientes: str 
     parsed_ingredientes, errores = validar_ingredientes_con_restricciones(ingredientes, restricciones)
 
     if errores:
-        # Retornar los ingredientes con los errores encontrados 
-        return JSONResponse(content={"ingredientes_no_aprobados": errores, "ingredientes": parsed_ingredientes}, status_code=200)
+        # Retornar los ingredientes con los errores encontrados
+        return JSONResponse(content={
+            "ingredientes_no_aprobados": errores, 
+            "ingredientes": parsed_ingredientes
+        }, status_code=200)
     
-    # Si no hay errores, retornar los ingredientes
-    return JSONResponse(content={"ingredientes_validados": parsed_ingredientes}, status_code=200)
+    # Si no hay errores, retornar los ingredientes validados
+    return JSONResponse(content={
+        "ingredientes_validados": parsed_ingredientes
+    }, status_code=200)
 
 @router.post("/generar-receta")
 async def generar_receta(ingredientes: str = Form(""), preferencias: str = Form(""), restricciones: str = Form(""), tiempo: str = Form(""), tipo_comida: str = Form(""), herramientas: str = Form(""), experiencia: str = Form(""), current_user: dict = Depends(get_current_user)):
