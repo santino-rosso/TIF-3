@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
 import { useValidarIngredientes } from "../utils/useValidarIngredientes";
@@ -18,8 +18,39 @@ const FormularioReceta = () => {
   const [imagen, setImagen] = useState(null);
   const [errores, setErrores] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [mostrarCamara, setMostrarCamara] = useState(false);
+  const [stream, setStream] = useState(null);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
   const navigate = useNavigate();
   const { validarIngredientes: validarIngredientesHook } = useValidarIngredientes();
+
+  // Limpiar recursos de la cámara al desmontar el componente
+  useEffect(() => {
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [stream]);
+
+  // Asignar el stream al video cuando se abra la cámara
+  useEffect(() => {
+    if (mostrarCamara && stream && videoRef.current) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [mostrarCamara, stream]);
+
+  // Limpiar URL de objeto cuando cambie la imagen
+  useEffect(() => {
+    return () => {
+      if (imagen && typeof imagen === 'object' && imagen.name) {
+        // Solo limpiar si es un File object con una URL creada
+        const url = URL.createObjectURL(imagen);
+        URL.revokeObjectURL(url);
+      }
+    };
+  }, [imagen]);
 
 
   const handleChange = (e) => {
@@ -35,6 +66,59 @@ const FormularioReceta = () => {
     // Limpiar campos al cambiar modo
     setDatos((prev) => ({ ...prev, ingredientes: "" }));
     setImagen(null);
+    // Cerrar cámara si está abierta
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    setMostrarCamara(false);
+  };
+
+  const iniciarCamara = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          facingMode: 'environment', // Usar cámara trasera por defecto
+          width: { ideal: 640 },
+          height: { ideal: 480 }
+        } 
+      });
+      setStream(mediaStream);
+      setMostrarCamara(true);
+      
+      // Limpiar errores previos
+      setErrores([]);
+    } catch (error) {
+      console.error('Error al acceder a la cámara:', error);
+      setErrores(['No se pudo acceder a la cámara. Verifica los permisos o prueba con otro navegador.']);
+    }
+  };
+
+  const capturarFoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const canvas = canvasRef.current;
+      const video = videoRef.current;
+      
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0);
+      
+      canvas.toBlob((blob) => {
+        const file = new File([blob], 'foto-ingredientes.jpg', { type: 'image/jpeg' });
+        setImagen(file);
+        cerrarCamara();
+      }, 'image/jpeg', 0.8);
+    }
+  };
+
+  const cerrarCamara = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    setMostrarCamara(false);
   };
 
   const validarFormulario = () => {
@@ -139,7 +223,7 @@ const FormularioReceta = () => {
             onChange={handleModoChange} 
             className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
           >
-            <option value="imagen">📷 Subir imagen</option>
+            <option value="imagen">📷 Subir imagen o usar cámara</option>
             <option value="texto">✍️ Ingresarlos manualmente</option>
           </select>
         </div>
@@ -161,26 +245,134 @@ const FormularioReceta = () => {
           )}
 
           {modoIngredientes === "imagen" && (
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-400 transition-colors relative">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImagen}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                id="imagen-input"
-              />
-              <div className="pointer-events-none">
-                <div className="text-gray-600">
-                  <span className="text-4xl mb-3 block">📸</span>
-                  <p className="text-lg font-medium mb-1">
-                    {imagen ? imagen.name : "Sube una imagen de tus ingredientes"}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {imagen ? "Imagen seleccionada" : "Haz clic aquí o arrastra una imagen"}
-                  </p>
+            <>
+              {!mostrarCamara ? (
+                <div className="space-y-4">
+                  {/* Botones para elegir entre archivo y cámara */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={iniciarCamara}
+                      className="flex items-center justify-center p-4 border-2 border-dashed border-green-300 rounded-lg hover:border-green-400 hover:bg-green-50 transition-colors"
+                    >
+                      <svg className="w-6 h-6 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span className="text-green-700 font-medium">Usar cámara</span>
+                    </button>
+                    
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImagen}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        id="imagen-input"
+                      />
+                      <div className="flex items-center justify-center p-4 border-2 border-dashed border-blue-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors cursor-pointer">
+                        <svg className="w-6 h-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span className="text-blue-700 font-medium">Subir imagen</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Mostrar imagen seleccionada */}
+                  {imagen && (
+                    <div className="border-2 border-green-300 rounded-lg p-4 bg-green-50">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center">
+                          <span className="text-green-600 text-2xl mr-3">✅</span>
+                          <div>
+                            <p className="text-green-800 font-medium">Imagen seleccionada:</p>
+                            <p className="text-green-600 text-sm">{imagen.name}</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setImagen(null)}
+                          className="text-red-500 hover:text-red-700 text-xl"
+                        >
+                          ❌
+                        </button>
+                      </div>
+                      
+                      {/* Vista previa de la imagen */}
+                      <div className="mt-3">
+                        <img
+                          src={URL.createObjectURL(imagen)}
+                          alt="Vista previa de ingredientes"
+                          className="w-full max-w-xs mx-auto rounded-lg shadow-md"
+                          style={{ maxHeight: '200px', objectFit: 'cover' }}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            </div>
+              ) : (
+                /* Modal de cámara */
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
+                  <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-semibold text-gray-800">Capturar foto</h3>
+                      <button
+                        type="button"
+                        onClick={cerrarCamara}
+                        className="text-gray-500 hover:text-gray-700 text-2xl"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="relative bg-gray-100 rounded-lg overflow-hidden" style={{ minHeight: '300px' }}>
+                        <video
+                          ref={videoRef}
+                          autoPlay
+                          playsInline
+                          muted
+                          className="w-full h-full object-cover rounded-lg"
+                          style={{ minHeight: '300px' }}
+                        />
+                        {!stream && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
+                            <p className="text-gray-600">Iniciando cámara...</p>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex justify-center space-x-4">
+                        <button
+                          type="button"
+                          onClick={capturarFoto}
+                          className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+                        >
+                          <span className="flex items-center">
+                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            Capturar
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={cerrarCamara}
+                          className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Canvas oculto para capturar la foto */}
+              <canvas ref={canvasRef} style={{ display: 'none' }} />
+            </>
           )}
         </div>
 
