@@ -2,8 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
 import AuthForm from "../components/AuthForm";
-import { Link } from "react-router-dom";
-
 
 const Login = () => {
     const navigate = useNavigate();
@@ -33,20 +31,22 @@ const Login = () => {
     };
 
     return (
-        <div className="flex items-center justify-center h-screen bg-gray-100">
-          <AuthForm
-            title="Iniciar sesión"
-            onSubmit={handleLogin}
-            email={email}
-            setEmail={setEmail}
-            password={password}
-            setPassword={setPassword}
-            error={error}
-            submitLabel="Entrar"
-            alternativeLink="/register"
-            alternativeLinkText="Crear cuenta nueva"
-            alternativeLinkLabel="¿No tienes una cuenta?"
-          />
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 grid place-items-center p-4">
+            <div className="w-full max-w-md">
+                <AuthForm
+                    title="Iniciar sesión"
+                    onSubmit={handleLogin}
+                    email={email}
+                    setEmail={setEmail}
+                    password={password}
+                    setPassword={setPassword}
+                    error={error}
+                    submitLabel="Entrar"
+                    alternativeLink="/register"
+                    alternativeLinkText="Crear cuenta nueva"
+                    alternativeLinkLabel="¿No tienes una cuenta?"
+                />
+            </div>
         </div>
     );
 };
