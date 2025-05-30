@@ -118,59 +118,167 @@ const FormularioReceta = () => {
   };
 
   return (
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-6">
         
         {loading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="flex flex-col items-center">
-            <div className="w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-            <p className="mt-4 text-white text-lg">Generando receta...</p>
+          <div className="flex flex-col items-center bg-white rounded-lg p-6 shadow-xl">
+            <div className="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+            <p className="mt-4 text-gray-700 text-lg font-medium">Generando receta...</p>
           </div>
         </div>
         )}
 
-        <div className="flex items-center gap-4">
-          <label className="font-semibold">¿Cómo querés ingresar los ingredientes?</label>
-          <select value={modoIngredientes} onChange={handleModoChange} className="border p-2 rounded">
-            <option value="imagen">Subir imagen</option>
-            <option value="texto">Ingresarlos manualmente</option>
+        {/* Modo de ingredientes */}
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <label className="block text-lg font-semibold mb-3 text-gray-700">
+            ¿Cómo querés ingresar los ingredientes?
+          </label>
+          <select 
+            value={modoIngredientes} 
+            onChange={handleModoChange} 
+            className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
+          >
+            <option value="imagen">📷 Subir imagen</option>
+            <option value="texto">✍️ Ingresarlos manualmente</option>
           </select>
         </div>
 
-        {modoIngredientes === "texto" && (
-          <textarea
-            name="ingredientes"
-            placeholder="Ej: tomate, arroz, huevo..."
-            value={datos.ingredientes}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-          />
-        )}
+        {/* Campo de ingredientes */}
+        <div className="space-y-2">
+          <label className="block text-lg font-semibold text-gray-700">
+            Ingredientes
+          </label>
+          {modoIngredientes === "texto" && (
+            <textarea
+              name="ingredientes"
+              placeholder="Ej: tomate, arroz, huevo, cebolla, ajo..."
+              value={datos.ingredientes}
+              onChange={handleChange}
+              rows="4"
+              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base resize-none"
+            />
+          )}
 
-        {modoIngredientes === "imagen" && (
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImagen}
-            className="w-full border p-2 rounded"
-          />
-        )}
+          {modoIngredientes === "imagen" && (
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-400 transition-colors relative">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImagen}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                id="imagen-input"
+              />
+              <div className="pointer-events-none">
+                <div className="text-gray-600">
+                  <span className="text-4xl mb-3 block">📸</span>
+                  <p className="text-lg font-medium mb-1">
+                    {imagen ? imagen.name : "Sube una imagen de tus ingredientes"}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {imagen ? "Imagen seleccionada" : "Haz clic aquí o arrastra una imagen"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
 
-        {["preferencias", "restricciones", "tiempo", "tipo_comida", "herramientas", "experiencia"].map((campo) => (
-          <input
-            key={campo}
-            type="text"
-            name={campo}
-            placeholder={campo}
-            value={datos[campo]}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-          />
-        ))}
+        {/* Grid de campos adicionales */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Preferencias alimentarias
+            </label>
+            <input
+              type="text"
+              name="preferencias"
+              placeholder="Ej: vegetariano, sin gluten..."
+              value={datos.preferencias}
+              onChange={handleChange}
+              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
+            />
+          </div>
 
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Restricciones alimentarias
+            </label>
+            <input
+              type="text"
+              name="restricciones"
+              placeholder="Ej: alergias, intolerancias..."
+              value={datos.restricciones}
+              onChange={handleChange}
+              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Tiempo disponible
+            </label>
+            <input
+              type="text"
+              name="tiempo"
+              placeholder="Ej: 30 minutos, 1 hora..."
+              value={datos.tiempo}
+              onChange={handleChange}
+              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Tipo de comida
+            </label>
+            <input
+              type="text"
+              name="tipo_comida"
+              placeholder="Ej: desayuno, almuerzo, cena..."
+              value={datos.tipo_comida}
+              onChange={handleChange}
+              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Herramientas disponibles
+            </label>
+            <input
+              type="text"
+              name="herramientas"
+              placeholder="Ej: horno, sartén, licuadora..."
+              value={datos.herramientas}
+              onChange={handleChange}
+              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Nivel de experiencia
+            </label>
+            <input
+              type="text"
+              name="experiencia"
+              placeholder="Ej: principiante, intermedio, avanzado..."
+              value={datos.experiencia}
+              onChange={handleChange}
+              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
+            />
+          </div>
+        </div>
+
+        {/* Errores */}
         {errores.length > 0 && (
-          <div className="bg-red-100 text-red-700 p-2 rounded">
-            <ul className="list-disc list-inside">
+          <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg">
+            <div className="flex items-center mb-2">
+              <span className="text-lg">⚠️</span>
+              <span className="ml-2 font-semibold">Error:</span>
+            </div>
+            <ul className="list-disc list-inside space-y-1">
               {errores.map((err, i) => (
                 <li key={i}>{err}</li>
               ))}
@@ -178,9 +286,26 @@ const FormularioReceta = () => {
           </div>
         )}
 
-        <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded">
-          Generar Receta
-        </button>
+        {/* Botón de envío */}
+        <div className="pt-4">
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white font-bold py-4 px-6 rounded-lg text-lg transition-colors transform hover:scale-[1.02] focus:outline-none focus:ring-4 focus:ring-green-300 shadow-lg"
+          >
+            {loading ? (
+              <span className="flex items-center justify-center">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                Generando...
+              </span>
+            ) : (
+              <span className="flex items-center justify-center">
+                <span className="mr-2">🍳</span>
+                Generar Receta
+              </span>
+            )}
+          </button>
+        </div>
       </form>
   );
 };
