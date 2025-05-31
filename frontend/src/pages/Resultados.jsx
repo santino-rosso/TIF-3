@@ -94,7 +94,7 @@ const Resultados = () => {
 
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 py-8">
-        <RecetaCard receta={receta.receta_generada} similares={receta.recetas_similares} />
+        <RecetaCard receta={receta.receta_generada} similares={receta.recetas_similares} tipo="generada" />
         
         {/* Back to Home Button */}
         <div className="mt-12 text-center">

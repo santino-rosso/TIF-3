@@ -208,7 +208,7 @@ const getTituloIcon = (titulo) => {
   return <FileText className="w-6 h-6 text-gray-500" />;
 };
 
-const RecetaCard = ({ receta, similares }) => {
+const RecetaCard = ({ receta, similares, tipo = "generada" }) => {
   const [guardadas, setGuardadas] = useState({
     principal: false,
     similares: similares ? new Array(similares.length).fill(false) : []
@@ -269,11 +269,23 @@ const RecetaCard = ({ receta, similares }) => {
         <div className="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div>
-              <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                <ChefHat className="w-8 h-8 text-white" />
-                Tu Receta Personalizada
-              </h2>
-              <p className="text-green-100 text-sm">Creada especialmente para ti</p>
+              {tipo === "generada" ? (
+                <>
+                  <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                    <ChefHat className="w-8 h-8 text-white" />
+                    Tu Receta Personalizada
+                  </h2>
+                  <p className="text-green-100 text-sm">Creada especialmente para ti</p>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                    <ChefHat className="w-8 h-8 text-white" />
+                    Receta recomendada para vos
+                  </h2>
+                  <p className="text-green-100 text-sm">Sugerida según tus favoritas</p>
+                </>
+              )}
             </div>
             <button
               onClick={() => toggleFavorito(receta._id, true)}
