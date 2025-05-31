@@ -34,6 +34,10 @@ const Navbar = () => {
             <span>Favoritos</span>
           </Link>
 
+          <li>
+            <Link to="/recomendaciones">Recomendadas</Link>
+          </li>
+
           <Link 
             to="/perfil" 
             className="text-sm sm:text-base text-gray-300 hover:text-blue-400 transition-colors flex items-center gap-2"

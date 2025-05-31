@@ -10,6 +10,7 @@ from fastapi import Depends
 from app.services.auth_service import get_current_user
 from app.kag.validador import validar_ingredientes_con_restricciones
 from fastapi import Form
+from app.services.recomendador_service import obtener_recomendaciones_por_favoritos
 
 router = APIRouter()
 
@@ -99,3 +100,10 @@ async def generar_receta(ingredientes: str = Form(""), preferencias: str = Form(
         "receta_generada": receta_generada_obj,
         "recetas_similares": recetas_similares_serializadas
     }, status_code=200)
+
+@router.get("/recetas-recomendadas")
+async def recetas_recomendadas(current_user: dict = Depends(get_current_user)):
+    # Recomendaciones personalizadas según favoritos/embedding
+    recetas = await obtener_recomendaciones_por_favoritos(current_user["email"], top_k=10)
+    recetas_serializadas = [serializar_receta(r) for r in recetas]
+    return JSONResponse(content={"recomendadas": recetas_serializadas}, status_code=200)

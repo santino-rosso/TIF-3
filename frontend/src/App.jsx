@@ -6,6 +6,7 @@ import PrivateRoute from "./components/PrivateRoute";
 import Register from "./pages/Register";
 import Favoritos from "./pages/Favoritos";
 import Perfil from "./pages/Perfil";
+import Recomendaciones from "./pages/Recomendaciones";
 
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
         <Route path="/resultados" element={<Resultados />} />
         <Route path="/favoritos" element={<Favoritos />} />
         <Route path="/perfil" element={<Perfil />} />
+        <Route path="/recomendaciones" element={<Recomendaciones />} />
       </Route>
     </Routes>
   );
