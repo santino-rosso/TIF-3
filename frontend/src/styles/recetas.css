@@ -1,0 +1,129 @@
+/* Estilos específicos para el formateo de recetas */
+
+.receta-container {
+  line-height: 1.7;
+}
+
+.receta-container h3 {
+  scroll-margin-top: 2rem;
+}
+
+.receta-container ul li {
+  position: relative;
+}
+
+.receta-container ul li::before {
+  content: '';
+  position: absolute;
+  left: -1rem;
+  top: 0.75rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  background: linear-gradient(135deg, #10b981, #059669);
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
+.paso-numero {
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+  transform: translateZ(0);
+  transition: all 0.2s ease;
+}
+
+.paso-numero:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(59, 130, 246, 0.4);
+}
+
+.info-destacada {
+  background: linear-gradient(135deg, #fef3c7, #fcd34d);
+  border: 2px solid #f59e0b;
+  box-shadow: 0 4px 8px rgba(245, 158, 11, 0.1);
+}
+
+.seccion-titulo {
+  position: relative;
+}
+
+.seccion-titulo::after {
+  content: '';
+  position: absolute;
+  bottom: -0.5rem;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, currentColor, transparent);
+  opacity: 0.3;
+  border-radius: 2px;
+}
+
+/* Animaciones suaves */
+.receta-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.receta-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Mejoras para la legibilidad */
+.texto-receta {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.lista-ingredientes li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+}
+
+.lista-ingredientes li:last-child {
+  border-bottom: none;
+}
+
+.paso-preparacion {
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border-left: 4px solid #3b82f6;
+  transition: all 0.2s ease;
+}
+
+.paso-preparacion:hover {
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  border-left-color: #1e40af;
+}
+
+/* Responsive improvements */
+@media (max-width: 640px) {
+  .receta-container {
+    font-size: 0.9rem;
+  }
+  
+  .receta-container h3 {
+    font-size: 1.1rem;
+  }
+  
+  .paso-numero {
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .receta-container {
+    color: #e5e7eb;
+  }
+  
+  .paso-preparacion {
+    background: linear-gradient(135deg, #1e3a8a, #1e40af);
+    color: #e5e7eb;
+  }
+  
+  .info-destacada {
+    background: linear-gradient(135deg, #92400e, #b45309);
+    border-color: #d97706;
+    color: #fef3c7;
+  }
+}
