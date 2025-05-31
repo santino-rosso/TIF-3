@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axiosInstance from "../utils/axiosInstance";
 import Navbar from "../components/Navbar";
+import RecetaCard from '../components/RecetaCard';
 
 
 const Favoritos = () => {
@@ -41,29 +42,36 @@ const Favoritos = () => {
 
   if (favoritos.length === 0) {
     return (
-      <div className="container mx-auto p-4">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100">
         <Navbar />
-        <h2 className="text-2xl font-bold text-green-700 mb-4">Tus Recetas Favoritas</h2>
-        <p className="text-lg text-gray-600">Aún no tenés recetas guardadas.</p>
+        <div className="max-w-2xl mx-auto py-16 px-4 flex flex-col items-center justify-center">
+          <h2 className="text-3xl font-bold text-green-700 mb-4 text-center">Tus Recetas Favoritas</h2>
+          <p className="text-lg text-gray-600 mb-8 text-center">Aún no tenés recetas guardadas.</p>
+          <img src="/vite.svg" alt="Sin favoritos" className="w-32 opacity-60" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-4">
-        <Navbar />
-        <h2 className="text-2xl font-bold text-green-700 mb-4">Tus Recetas Favoritas</h2>
-        {favoritos.map((receta) => (
-            <div key={receta._id} className="bg-white rounded shadow p-4 mb-4 relative">
-            <pre className="whitespace-pre-wrap">{receta.texto_receta}</pre>
-            <button
-                onClick={() => handleEliminar(receta._id)}
-                className="absolute top-2 right-2 text-red-500 hover:text-red-700"
-            >
-                🗑 Eliminar
-            </button>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100">
+      <Navbar />
+      <div className="max-w-5xl mx-auto py-10 px-2 sm:px-6 lg:px-8">
+        <h2 className="text-3xl font-bold text-green-700 mb-8 text-center">Tus Recetas Favoritas</h2>
+        <div className="flex flex-col gap-8">
+          {favoritos.map((receta) => (
+            <div key={receta._id} className="relative group bg-white rounded-2xl shadow-lg border border-green-100 p-6 flex flex-col transition-transform hover:scale-[1.02]">
+              <div className="flex-1 flex flex-col">
+                {RecetaCard ? (
+                  <RecetaCard receta={receta} />
+                ) : (
+                  <pre className="whitespace-pre-wrap text-gray-700 text-base mt-2">{receta.texto_receta}</pre>
+                )}
+              </div>
             </div>
-        ))}
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
