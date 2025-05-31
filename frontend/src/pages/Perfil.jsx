@@ -50,37 +50,47 @@ const Perfil = () => {
   };
 
   return (
-    <div className="max-w-lg mx-auto mt-10 p-6 bg-white rounded shadow">
-        <Navbar />
-      <h2 className="text-2xl font-bold mb-4 text-green-700">Tu Perfil</h2>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100">
+      <Navbar />
+      <div className="flex flex-col items-center justify-center min-h-[80vh] px-2">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-lg border border-green-100 p-8 mt-10 mb-10">
+          <h2 className="text-3xl font-bold mb-6 text-green-700 text-center">Tu Perfil</h2>
 
-      <p className="mb-4"><strong>Email:</strong> {email}</p>
+          <div className="mb-6 text-center">
+            <p className="text-gray-500 text-sm">Email de usuario</p>
+            <span className="inline-block bg-green-100 text-green-700 rounded-full px-4 py-2 font-semibold text-base mb-2">
+              {email}
+            </span>
+          </div>
 
-      <form onSubmit={handleChangePassword} className="mb-6">
-        <label className="block mb-2 text-sm font-medium text-gray-700">Nueva Contraseña</label>
-        <input
-          type="password"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          required
-          className="w-full p-2 border rounded mb-3"
-        />
-        <button
-          type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          Cambiar Contraseña
-        </button>
-      </form>
+          <form onSubmit={handleChangePassword} className="mb-8">
+            <label className="block mb-2 text-sm font-medium text-gray-700">Nueva Contraseña</label>
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              required
+              className="w-full p-2 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-green-400 mb-4"
+              placeholder="Ingresá tu nueva contraseña"
+            />
+            <button
+              type="submit"
+              className="w-full bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors shadow"
+            >
+              Cambiar Contraseña
+            </button>
+          </form>
 
-      <button
-        onClick={handleEliminarCuenta}
-        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-      >
-        Eliminar Cuenta
-      </button>
+          <button
+            onClick={handleEliminarCuenta}
+            className="w-full bg-red-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-600 transition-colors shadow"
+          >
+            Eliminar Cuenta
+          </button>
 
-      {message && <p className="mt-4 text-sm">{message}</p>}
+          {message && <p className={`mt-6 text-center text-base font-medium ${message.startsWith('✅') ? 'text-green-600' : 'text-red-500'}`}>{message}</p>}
+        </div>
+      </div>
     </div>
   );
 };
