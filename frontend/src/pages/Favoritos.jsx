@@ -63,7 +63,7 @@ const Favoritos = () => {
             <div key={receta._id} className="relative group bg-white rounded-2xl shadow-lg border border-green-100 p-6 flex flex-col transition-transform hover:scale-[1.02]">
               <div className="flex-1 flex flex-col">
                 {RecetaCard ? (
-                  <RecetaCard receta={receta} />
+                  <RecetaCard receta={receta} tipo="favorita" />
                 ) : (
                   <pre className="whitespace-pre-wrap text-gray-700 text-base mt-2">{receta.texto_receta}</pre>
                 )}

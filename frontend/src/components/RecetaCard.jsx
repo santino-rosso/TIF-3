@@ -277,6 +277,14 @@ const RecetaCard = ({ receta, similares, tipo = "generada" }) => {
                   </h2>
                   <p className="text-green-100 text-sm">Creada especialmente para ti</p>
                 </>
+              ) : tipo === "favorita" ? (
+                <>
+                  <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                    <ChefHat className="w-8 h-8 text-white" />
+                    Receta guardada
+                  </h2>
+                  <p className="text-green-100 text-sm">Marcada como favorita por vos</p>
+                </>
               ) : (
                 <>
                   <h2 className="text-2xl font-bold text-white flex items-center gap-2">
