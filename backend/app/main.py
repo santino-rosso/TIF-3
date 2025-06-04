@@ -34,10 +34,10 @@ app.include_router(user_router, prefix="/api", tags=["Usuarios"])
 app.include_router(favoritos_router, prefix="/api", tags=["Favoritos"])
 
 # Configuración de CORS
-# Permitir solicitudes desde el frontend en localhost:4173
+# Permitir solicitudes desde el frontend en localhost:4173 y localhost:5173
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:4173"],  
+    allow_origins=["http://localhost:4173", "http://localhost:5173"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
