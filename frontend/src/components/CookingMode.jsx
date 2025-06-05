@@ -360,6 +360,7 @@ const CookingMode = ({ recipe, onExit }) => {
     setTimeLeft(seconds);
     setActiveTimer(currentStep);
     setIsTimerRunning(true);
+    speak(`Temporizador iniciado por ${minutes} minutos`);
   };
 
   const pauseTimer = () => {
