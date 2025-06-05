@@ -28,6 +28,7 @@ const CookingMode = ({ recipe, onExit }) => {
   const wakeLockRef = useRef(null);
   const recognitionRef = useRef(null);
   const speechSynthesisRef = useRef(null);
+  const isRecognitionActiveRef = useRef(false);
 
   // Extraer instrucciones de la receta
   const parseInstructions = (recipeText) => {
@@ -119,20 +120,43 @@ const CookingMode = ({ recipe, onExit }) => {
       recognitionRef.current.interimResults = false;
       recognitionRef.current.lang = 'es-ES';
       
-      recognitionRef.current.onresult = (event) => {
-        const command = event.results[event.results.length - 1][0].transcript.toLowerCase();
-        handleVoiceCommand(command);
+      recognitionRef.current.onstart = () => {
+        console.log('Reconocimiento de voz iniciado');
+        isRecognitionActiveRef.current = true;
+        setIsListening(true);
+      };
+
+      recognitionRef.current.onend = () => {
+        console.log('Reconocimiento de voz terminado');
+        isRecognitionActiveRef.current = false;
+        // Solo reiniciar si el usuario quiere seguir escuchando
+        if (isListening) {
+          setTimeout(() => {
+            if (isListening && !isRecognitionActiveRef.current) {
+              startRecognition();
+            }
+          }, 100);
+        } else {
+          setIsListening(false);
+        }
       };
 
       recognitionRef.current.onerror = (event) => {
         console.error('Error en reconocimiento de voz:', event.error);
+        isRecognitionActiveRef.current = false;
         setIsListening(false);
-      };
-
-      recognitionRef.current.onend = () => {
-        if (isListening) {
-          recognitionRef.current.start(); // Reiniciar si seguimos escuchando
+        
+        if (event.error === 'not-allowed') {
+          alert('Permisos de micrófono denegados. Por favor, permite el acceso al micrófono.');
+        } else if (event.error === 'no-speech') {
+          console.log('No se detectó habla, reintentando...');
         }
+      };
+      
+      recognitionRef.current.onresult = (event) => {
+        const command = event.results[event.results.length - 1][0].transcript.toLowerCase();
+        console.log('Comando detectado:', command);
+        handleVoiceCommand(command);
       };
 
       setVoiceSupported(true);
@@ -144,11 +168,12 @@ const CookingMode = ({ recipe, onExit }) => {
     }
 
     return () => {
-      if (recognitionRef.current) {
+      if (recognitionRef.current && isRecognitionActiveRef.current) {
         recognitionRef.current.stop();
+        isRecognitionActiveRef.current = false;
       }
     };
-  }, [isListening]);
+  }, []);
 
   // Gestión de temporizadores
   useEffect(() => {
@@ -216,15 +241,44 @@ const CookingMode = ({ recipe, onExit }) => {
     }
   };
 
+  const startRecognition = () => {
+    if (!recognitionRef.current || isRecognitionActiveRef.current) return;
+    
+    try {
+      recognitionRef.current.start();
+      console.log('Intentando iniciar reconocimiento...');
+    } catch (error) {
+      console.error('Error al iniciar reconocimiento:', error);
+      setIsListening(false);
+      isRecognitionActiveRef.current = false;
+    }
+  };
+
+  const stopRecognition = () => {
+    if (!recognitionRef.current || !isRecognitionActiveRef.current) return;
+    
+    try {
+      recognitionRef.current.stop();
+      console.log('Deteniendo reconocimiento...');
+    } catch (error) {
+      console.error('Error al detener reconocimiento:', error);
+    }
+  };
+
   const toggleVoiceRecognition = () => {
-    if (!voiceSupported) return;
+    if (!voiceSupported) {
+      console.log('Reconocimiento de voz no soportado');
+      return;
+    }
     
     if (isListening) {
-      recognitionRef.current.stop();
+      // Detener reconocimiento
       setIsListening(false);
+      stopRecognition();
     } else {
-      recognitionRef.current.start();
+      // Iniciar reconocimiento
       setIsListening(true);
+      startRecognition();
     }
   };
 
