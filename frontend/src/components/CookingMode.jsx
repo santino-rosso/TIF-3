@@ -1,13 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   Play, 
   Pause, 
   RotateCcw, 
   ChefHat, 
   Clock, 
-  CheckCircle2, 
   ArrowLeft, 
-  ArrowRight, 
   Mic, 
   MicOff,
   Volume2,
@@ -17,8 +15,8 @@ import {
 import './CookingMode.css';
 
 const CookingMode = ({ recipe, onExit }) => {
+  const [showCompletion, setShowCompletion] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [timers, setTimers] = useState({});
   const [activeTimer, setActiveTimer] = useState(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
@@ -232,7 +230,10 @@ const CookingMode = ({ recipe, onExit }) => {
       if (currentStepRef.current < instructionsRef.current.length - 1) {
         setCurrentStep(currentStepRef.current + 1);
         resetTimer();
+      } else if (currentStepRef.current === instructionsRef.current.length - 1) {
+        setShowCompletion(true);
       }
+      
     } else if (command.includes('anterior')) {
       if (currentStepRef.current > 0) {
         setCurrentStep(currentStepRef.current - 1);
@@ -387,6 +388,8 @@ const CookingMode = ({ recipe, onExit }) => {
     if (currentStep < instructions.length - 1) {
       setCurrentStep(currentStep + 1);
       resetTimer();
+    } else if (currentStep === instructions.length - 1) {
+      setShowCompletion(true);
     }
   };
 
@@ -486,7 +489,7 @@ const CookingMode = ({ recipe, onExit }) => {
           {suggestedTime && (
             <div className="timer-suggestion">
               <Clock size={16} />
-              Tiempo sugerido: {suggestedTime} minutos
+              Tiempo: {suggestedTime} {suggestedTime>1? "minutos": "minuto"}
               <button 
                 onClick={() => startTimer(suggestedTime)}
                 className="btn-timer-start"
@@ -503,7 +506,7 @@ const CookingMode = ({ recipe, onExit }) => {
                 <li>"Siguiente" - Avanzar al siguiente paso</li>
                 <li>"Anterior" - Volver al paso anterior</li>
                 <li>"Repetir" - Leer la instrucción actual</li>
-                <li>"Iniciar" - Iniciar temporizador (si está disponible)</li>
+                <li>"Iniciar" - Iniciar temporizador</li>
                 <li>"Pausar" - Pausar temporizador</li>
                 <li>"Reanudar" - Reanudar temporizador</li>
                 <li>"Reiniciar" - Reiniciar el temporizador</li>
@@ -540,16 +543,16 @@ const CookingMode = ({ recipe, onExit }) => {
 
           <button 
             onClick={nextStep} 
-            disabled={currentStep === instructions.length - 1}
+            disabled={showCompletion}
             className="step-btn step-btn-next"
           >
-            Siguiente
+            {currentStep === instructions.length - 1 ? 'Finalizar' : 'Siguiente'}
             <SkipForward size={20} />
           </button>
         </div>
       </div>
 
-      {currentStep === instructions.length - 1 && (
+      {showCompletion && (
         <div className="completion-card">
           <h3>🎉 ¡Receta completada!</h3>
           <p>¡Felicitaciones! Has terminado de cocinar {recipe.nombre || recipe.title}</p>
