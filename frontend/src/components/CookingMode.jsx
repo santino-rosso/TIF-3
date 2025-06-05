@@ -32,6 +32,7 @@ const CookingMode = ({ recipe, onExit }) => {
   const isListeningRef = useRef(false);
   const currentStepRef = useRef(0);
   const instructionsRef = useRef([]);
+  const isTimerRunningRef = useRef(false);
 
   // Extraer instrucciones de la receta
   const parseInstructions = (recipeText) => {
@@ -103,6 +104,10 @@ const CookingMode = ({ recipe, onExit }) => {
   useEffect(() => {
     instructionsRef.current = instructions;
   }, [instructions]);
+
+  useEffect(() => {
+    isTimerRunningRef.current = isTimerRunning;
+  }, [isTimerRunning]);
 
   // Mantener pantalla encendida
   useEffect(() => {
@@ -235,7 +240,7 @@ const CookingMode = ({ recipe, onExit }) => {
       }
     } else if (command.includes('repetir')) {
       speak(instructionsRef.current[currentStepRef.current]);
-    } else if (command.includes('temporizador')) {
+    } else if (command.includes('iniciar') || command.includes('reiniciar')) {
       // Solo funciona si hay un tiempo sugerido (botón visible)
       const currentInstruction = instructionsRef.current[currentStepRef.current];
       const suggestedTime = extractTimeFromStep(currentInstruction);
@@ -250,9 +255,14 @@ const CookingMode = ({ recipe, onExit }) => {
       } else {
         speak('No hay temporizador disponible para este paso');
       }
-    } else if (command.includes('pausar')) {
+    } else if (command.includes('pausar') || command.includes('reanudar')) {
+      const wasRunning = isTimerRunningRef.current;
       pauseTimer();
-      speak('Temporizador pausado');
+      if (wasRunning) {
+        speak('Temporizador pausado');
+      } else {
+        speak('Temporizador reanudado');
+      }
     }
   };
 
@@ -364,7 +374,7 @@ const CookingMode = ({ recipe, onExit }) => {
   };
 
   const pauseTimer = () => {
-    setIsTimerRunning(!isTimerRunning);
+    setIsTimerRunning(prev => !prev);
   };
 
   const resetTimer = () => {
@@ -493,7 +503,10 @@ const CookingMode = ({ recipe, onExit }) => {
                 <li>"Siguiente" - Avanzar al siguiente paso</li>
                 <li>"Anterior" - Volver al paso anterior</li>
                 <li>"Repetir" - Leer la instrucción actual</li>
-                <li>"Temporizador" - Iniciar temporizador (si está disponible)</li>
+                <li>"Iniciar" - Iniciar temporizador (si está disponible)</li>
+                <li>"Pausar" - Pausar temporizador</li>
+                <li>"Reanudar" - Reanudar temporizador</li>
+                <li>"Reiniciar" - Reiniciar el temporizador</li>
               </ul>
             </div>
           )}
