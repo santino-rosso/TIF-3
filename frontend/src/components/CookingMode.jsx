@@ -521,7 +521,7 @@ const CookingMode = ({ recipe, onExit }) => {
               <button onClick={pauseTimer} className="timer-btn">
                 {isTimerRunning ? <Pause size={20} /> : <Play size={20} />}
               </button>
-              <button onClick={resetTimer} className="timer-btn">
+              <button onClick={() => startTimer(suggestedTime)} className="timer-btn">
                 <RotateCcw size={20} />
               </button>
             </div>
