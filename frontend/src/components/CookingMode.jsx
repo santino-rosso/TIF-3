@@ -238,6 +238,7 @@ const CookingMode = ({ recipe, onExit }) => {
       if (currentStepRef.current > 0) {
         setCurrentStep(currentStepRef.current - 1);
         resetTimer();
+        setShowCompletion(false);
       }
     } else if (command.includes('repetir')) {
       speak(instructionsRef.current[currentStepRef.current]);
@@ -397,6 +398,9 @@ const CookingMode = ({ recipe, onExit }) => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
       resetTimer();
+      if (showCompletion) {
+        setShowCompletion(false);
+      }
     }
   };
 
