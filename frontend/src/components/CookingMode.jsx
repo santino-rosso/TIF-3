@@ -236,20 +236,24 @@ const CookingMode = ({ recipe, onExit }) => {
     } else if (command.includes('repetir')) {
       speak(instructionsRef.current[currentStepRef.current]);
     } else if (command.includes('temporizador')) {
-      const time = extractTimeFromCommand(command);
-      if (time) {
-        startTimer(time);
-        speak(`Temporizador iniciado por ${time} minutos`);
+      // Solo funciona si hay un tiempo sugerido (botón visible)
+      const currentInstruction = instructionsRef.current[currentStepRef.current];
+      const suggestedTime = extractTimeFromStep(currentInstruction);
+      
+      if (suggestedTime) {
+        // Usar el currentStepRef para asegurar consistencia
+        const seconds = suggestedTime * 60;
+        setTimeLeft(seconds);
+        setActiveTimer(currentStepRef.current);
+        setIsTimerRunning(true);
+        speak(`Temporizador iniciado por ${suggestedTime} minutos`);
+      } else {
+        speak('No hay temporizador disponible para este paso');
       }
     } else if (command.includes('pausar')) {
       pauseTimer();
       speak('Temporizador pausado');
     }
-  };
-
-  const extractTimeFromCommand = (command) => {
-    const match = command.match(/(\d+)\s*(minuto|min)/);
-    return match ? parseInt(match[1]) : null;
   };
 
   const speak = (text) => {
@@ -488,7 +492,7 @@ const CookingMode = ({ recipe, onExit }) => {
                 <li>"Siguiente" - Avanzar al siguiente paso</li>
                 <li>"Anterior" - Volver al paso anterior</li>
                 <li>"Repetir" - Leer la instrucción actual</li>
-                <li>"Temporizador" - Iniciar temporizador</li>
+                <li>"Temporizador" - Iniciar temporizador (si está disponible)</li>
               </ul>
             </div>
           )}
