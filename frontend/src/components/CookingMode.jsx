@@ -29,6 +29,9 @@ const CookingMode = ({ recipe, onExit }) => {
   const recognitionRef = useRef(null);
   const speechSynthesisRef = useRef(null);
   const isRecognitionActiveRef = useRef(false);
+  const isListeningRef = useRef(false);
+  const currentStepRef = useRef(0);
+  const instructionsRef = useRef([]);
 
   // Extraer instrucciones de la receta
   const parseInstructions = (recipeText) => {
@@ -88,6 +91,19 @@ const CookingMode = ({ recipe, onExit }) => {
 
   const instructions = parseInstructions(recipe.texto_receta || recipe.receta || recipe.description || '');
 
+  // Mantener refs actualizados
+  useEffect(() => {
+    isListeningRef.current = isListening;
+  }, [isListening]);
+
+  useEffect(() => {
+    currentStepRef.current = currentStep;
+  }, [currentStep]);
+
+  useEffect(() => {
+    instructionsRef.current = instructions;
+  }, [instructions]);
+
   // Mantener pantalla encendida
   useEffect(() => {
     const requestWakeLock = async () => {
@@ -130,9 +146,9 @@ const CookingMode = ({ recipe, onExit }) => {
         console.log('Reconocimiento de voz terminado');
         isRecognitionActiveRef.current = false;
         // Solo reiniciar si el usuario quiere seguir escuchando
-        if (isListening) {
+        if (isListeningRef.current) {
           setTimeout(() => {
-            if (isListening && !isRecognitionActiveRef.current) {
+            if (isListeningRef.current && !isRecognitionActiveRef.current) {
               startRecognition();
             }
           }, 100);
@@ -205,22 +221,27 @@ const CookingMode = ({ recipe, onExit }) => {
 
   const handleVoiceCommand = (command) => {
     console.log('Comando de voz:', command);
+    console.log('Paso actual:', currentStepRef.current);
     
-    if (command.includes('siguiente') || command.includes('próximo')) {
-      nextStep();
-      speak('Siguiente paso');
-    } else if (command.includes('anterior') || command.includes('volver')) {
-      prevStep();
-      speak('Paso anterior');
-    } else if (command.includes('repetir') || command.includes('leer')) {
-      speak(instructions[currentStep]);
-    } else if (command.includes('temporizador') || command.includes('timer')) {
+    if (command.includes('siguiente')) {
+      if (currentStepRef.current < instructionsRef.current.length - 1) {
+        setCurrentStep(currentStepRef.current + 1);
+        resetTimer();
+      }
+    } else if (command.includes('anterior')) {
+      if (currentStepRef.current > 0) {
+        setCurrentStep(currentStepRef.current - 1);
+        resetTimer();
+      }
+    } else if (command.includes('repetir')) {
+      speak(instructionsRef.current[currentStepRef.current]);
+    } else if (command.includes('temporizador')) {
       const time = extractTimeFromCommand(command);
       if (time) {
         startTimer(time);
         speak(`Temporizador iniciado por ${time} minutos`);
       }
-    } else if (command.includes('pausar') || command.includes('parar')) {
+    } else if (command.includes('pausar')) {
       pauseTimer();
       speak('Temporizador pausado');
     }
@@ -233,10 +254,39 @@ const CookingMode = ({ recipe, onExit }) => {
 
   const speak = (text) => {
     if (speechSynthesisRef.current && text) {
+      // Pausar reconocimiento temporalmente durante la síntesis
+      const wasListening = isListeningRef.current;
+      if (wasListening && isRecognitionActiveRef.current) {
+        stopRecognition();
+      }
+
       speechSynthesisRef.current.cancel(); // Cancelar cualquier síntesis anterior
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'es-ES';
       utterance.rate = 0.9;
+      
+      utterance.onend = () => {
+        // Reanudar reconocimiento después de que termine la síntesis
+        if (wasListening) {
+          setTimeout(() => {
+            if (isListeningRef.current && !isRecognitionActiveRef.current) {
+              startRecognition();
+            }
+          }, 500); // Pequeña pausa para evitar detectar ecos
+        }
+      };
+
+      utterance.onerror = () => {
+        // Reanudar reconocimiento si hay error
+        if (wasListening) {
+          setTimeout(() => {
+            if (isListeningRef.current && !isRecognitionActiveRef.current) {
+              startRecognition();
+            }
+          }, 500);
+        }
+      };
+
       speechSynthesisRef.current.speak(utterance);
     }
   };
@@ -435,10 +485,10 @@ const CookingMode = ({ recipe, onExit }) => {
             <div className="voice-commands">
               <h4>Comandos de voz disponibles:</h4>
               <ul>
-                <li>"Siguiente paso" - Avanzar al siguiente paso</li>
+                <li>"Siguiente" - Avanzar al siguiente paso</li>
                 <li>"Anterior" - Volver al paso anterior</li>
                 <li>"Repetir" - Leer la instrucción actual</li>
-                <li>"Temporizador X minutos" - Iniciar temporizador</li>
+                <li>"Temporizador" - Iniciar temporizador</li>
               </ul>
             </div>
           )}
