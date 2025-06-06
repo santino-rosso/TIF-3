@@ -23,15 +23,6 @@ const Favoritos = () => {
     cargarFavoritos();
   }, []);
 
-  const handleEliminar = async (id) => {
-    try {
-      await axiosInstance.delete(`/favoritos/${id}`);
-      setFavoritos(prev => prev.filter(fav => fav._id !== id));
-    } catch (error) {
-      console.error("Error al eliminar favorito:", error);
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
@@ -60,14 +51,8 @@ const Favoritos = () => {
         <h2 className="text-3xl font-bold text-green-700 mb-8 text-center">Tus Recetas Favoritas</h2>
         <div className="flex flex-col gap-8">
           {favoritos.map((receta) => (
-            <div key={receta._id} className="relative group bg-white rounded-2xl shadow-lg border border-green-100 p-6 flex flex-col transition-transform hover:scale-[1.02]">
-              <div className="flex-1 flex flex-col">
-                {RecetaCard ? (
-                  <RecetaCard receta={receta} tipo="favorita" />
-                ) : (
-                  <pre className="whitespace-pre-wrap text-gray-700 text-base mt-2">{receta.texto_receta}</pre>
-                )}
-              </div>
+            <div key={receta._id} className="w-full max-w-2xl mx-auto">
+              <RecetaCard receta={receta} tipo="favorita" />
             </div>
           ))}
         </div>
