@@ -70,7 +70,7 @@ const Perfil = () => {
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               required
-              className="w-full p-2 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-green-400 mb-4"
+              className="w-full p-2 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-green-400 mb-4 bg-white text-gray-700"
               placeholder="Ingresá tu nueva contraseña"
             />
             <button

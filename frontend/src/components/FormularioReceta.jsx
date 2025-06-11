@@ -128,6 +128,15 @@ const FormularioReceta = () => {
     return nuevosErrores;
   };
 
+  // Función para verificar si el formulario es válido para habilitar/deshabilitar el botón
+  const esFormularioValido = () => {
+    if (modoIngredientes === "texto") {
+      return datos.ingredientes && datos.ingredientes.trim() !== "";
+    } else {
+      return imagen !== null;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -221,7 +230,7 @@ const FormularioReceta = () => {
           <select 
             value={modoIngredientes} 
             onChange={handleModoChange} 
-            className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
+            className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base bg-white text-gray-700"
           >
             <option value="imagen">📷 Subir imagen o usar cámara</option>
             <option value="texto">✍️ Ingresarlos manualmente</option>
@@ -240,7 +249,7 @@ const FormularioReceta = () => {
               value={datos.ingredientes}
               onChange={handleChange}
               rows="4"
-              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base resize-none"
+              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base resize-none bg-white text-gray-700"
             />
           )}
 
@@ -262,7 +271,7 @@ const FormularioReceta = () => {
                       <span className="text-green-700 font-medium">Usar cámara</span>
                     </button>
                     
-                    <div className="relative">
+                    <div className="relative hover:border-blue-400 hover:bg-blue-50 border-2 border-dashed border-blue-300 rounded-lg transition-colors cursor-pointer">
                       <input
                         type="file"
                         accept="image/*"
@@ -270,7 +279,7 @@ const FormularioReceta = () => {
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                         id="imagen-input"
                       />
-                      <div className="flex items-center justify-center p-4 border-2 border-dashed border-blue-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors cursor-pointer">
+                      <div className="flex items-center justify-center p-4">
                         <svg className="w-6 h-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
@@ -388,7 +397,7 @@ const FormularioReceta = () => {
               placeholder="Ej: vegetariano, sin gluten..."
               value={datos.preferencias}
               onChange={handleChange}
-              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
+              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base bg-white text-gray-700"
             />
           </div>
 
@@ -402,7 +411,7 @@ const FormularioReceta = () => {
               placeholder="Ej: alergias, intolerancias..."
               value={datos.restricciones}
               onChange={handleChange}
-              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
+              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base bg-white text-gray-700"
             />
           </div>
 
@@ -416,7 +425,7 @@ const FormularioReceta = () => {
               placeholder="Ej: 30 minutos, 1 hora..."
               value={datos.tiempo}
               onChange={handleChange}
-              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
+              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base bg-white text-gray-700"
             />
           </div>
 
@@ -430,7 +439,7 @@ const FormularioReceta = () => {
               placeholder="Ej: desayuno, almuerzo, cena..."
               value={datos.tipo_comida}
               onChange={handleChange}
-              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
+              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base bg-white text-gray-700"
             />
           </div>
 
@@ -444,7 +453,7 @@ const FormularioReceta = () => {
               placeholder="Ej: horno, sartén, licuadora..."
               value={datos.herramientas}
               onChange={handleChange}
-              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
+              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base bg-white text-gray-700"
             />
           </div>
 
@@ -458,7 +467,7 @@ const FormularioReceta = () => {
               placeholder="Ej: principiante, intermedio, avanzado..."
               value={datos.experiencia}
               onChange={handleChange}
-              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
+              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base bg-white text-gray-700"
             />
           </div>
         </div>
@@ -482,8 +491,14 @@ const FormularioReceta = () => {
         <div className="pt-4">
           <button 
             type="submit" 
-            disabled={loading}
-            className="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white font-bold py-4 px-6 rounded-lg text-lg transition-colors transform hover:scale-[1.02] focus:outline-none focus:ring-4 focus:ring-green-300 shadow-lg"
+            disabled={loading || !esFormularioValido()}
+            className={`w-full font-bold py-4 px-6 rounded-lg text-lg transition-colors transform focus:outline-none focus:ring-4 shadow-lg ${
+              !esFormularioValido() 
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                : loading 
+                  ? 'bg-gray-400 text-white cursor-not-allowed'
+                  : 'bg-green-500 hover:bg-green-600 text-white hover:scale-[1.02] focus:ring-green-300'
+            }`}
           >
             {loading ? (
               <span className="flex items-center justify-center">

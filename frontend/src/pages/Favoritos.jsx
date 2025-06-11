@@ -47,11 +47,11 @@ const Favoritos = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100">
       <Navbar />
-      <div className="max-w-5xl mx-auto py-10 px-2 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 py-8">
         <h2 className="text-3xl font-bold text-green-700 mb-8 text-center">Tus Recetas Favoritas</h2>
         <div className="flex flex-col gap-8">
           {favoritos.map((receta) => (
-            <div key={receta._id} className="w-full max-w-2xl mx-auto">
+            <div key={receta._id} className="w-full">
               <RecetaCard receta={receta} tipo="favorita" />
             </div>
           ))}

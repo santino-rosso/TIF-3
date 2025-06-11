@@ -78,14 +78,14 @@ const Resultados = () => {
       <Navbar />
       
       {/* Header Section */}
-      <div className="bg-white shadow-sm border-b border-gray-100">
+      <div className="bg-gradient-to-r from-green-500 to-green-600 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-6">
           <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
               ¡Tu receta está lista! 
               <span className="text-2xl md:text-3xl ml-2">🎉</span>
             </h1>
-            <p className="text-gray-600 text-lg">
+            <p className="text-green-100 text-lg">
               Hemos preparado una deliciosa receta personalizada para ti
             </p>
           </div>

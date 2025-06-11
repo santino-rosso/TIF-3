@@ -119,7 +119,7 @@ const formatearReceta = (texto) => {
       const contenido = linea.replace(/^\d+\.\s*/, '');
       pasosActual.push(
         <div className="paso-preparacion flex items-start gap-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-l-4 border-blue-400 shadow-sm mb-3" key={`paso-${i}`}> 
-          <span className="paso-numero bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold flex-shrink-0 shadow-md">{numero}</span>
+          <span className="paso-numero bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold flex-shrink-0 shadow-md">{numero}</span>
           <div className="flex-1">
             <span className="text-gray-800 leading-relaxed font-medium">{contenido}</span>
           </div>
@@ -364,14 +364,14 @@ const RecetaCard = ({ receta, similares, tipo = "generada" }) => {
           <div className="text-center">
             <h3 className="text-2xl font-bold text-gray-800 mb-2">Recetas Similares</h3>
             <p className="text-gray-600">Otras opciones que podrían interesarte</p>
-            <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto mt-3 rounded-full"></div>
+            <div className="w-24 h-1 bg-gradient-to-r from-green-500 to-blue-500 mx-auto mt-3 rounded-full"></div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {similares.map((rec, idx) => (
               <div key={idx} className="receta-card bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 border border-gray-100 overflow-hidden">
                 {/* Header de receta similar */}
-                <div className="bg-gradient-to-r from-blue-500 to-purple-500 px-5 py-3">
+                <div className="bg-gradient-to-r from-green-500 to-blue-500 px-5 py-3">
                   <div className="flex justify-between items-center">
                     <h4 className="text-lg font-semibold text-white flex items-center gap-2">
                       <Repeat className="w-6 h-6 text-white" />
@@ -380,7 +380,7 @@ const RecetaCard = ({ receta, similares, tipo = "generada" }) => {
                     <div className="flex gap-2">
                       <button
                         onClick={() => setShowCookingMode(rec)}
-                        className="flex items-center gap-1 px-3 py-1 rounded-md text-sm font-medium transition-all bg-orange-500 hover:bg-orange-600 text-white"
+                        className="flex items-center gap-1 px-3 py-1 rounded-md text-sm font-medium transition-all bg-blue-500 hover:bg-blue-600 text-white"
                       >
                         <ChefHat className="w-4 h-4" />
                         <span className="hidden sm:inline">Modo Cocina</span>
@@ -391,7 +391,7 @@ const RecetaCard = ({ receta, similares, tipo = "generada" }) => {
                         className={`flex items-center gap-1 px-3 py-1 rounded-md text-sm font-medium transition-all ${
                           guardadas.similares[idx] 
                             ? 'bg-red-500 hover:bg-red-600 text-white' 
-                            : 'bg-white hover:bg-gray-50 text-blue-600'
+                            : 'bg-white hover:bg-gray-50 text-green-600'
                         }`}
                       >
                         <svg className="w-4 h-4" fill={guardadas.similares[idx] ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
