@@ -18,6 +18,26 @@ import {
   ImageIcon
 } from 'lucide-react';
 
+// Función para extraer el nombre de la receta del texto
+const extraerTituloReceta = (textoReceta) => {
+  if (!textoReceta) return 'la receta';
+  
+  const lineas = textoReceta.split('\n');
+  for (const linea of lineas) {
+    const lineaTrimmed = linea.trim();
+    if (/^(\*\*)?nombre de la receta(\*\*)?:/i.test(lineaTrimmed)) {
+      let titulo = lineaTrimmed
+        .replace(/^\*\*/, '')           
+        .replace(/\*\*$/, '')           
+        .replace(/^nombre de la receta\s*:\s*/i, '')  
+        .replace(/^\*\*/, '')        
+        .trim();
+      return titulo || 'la receta';
+    }
+  }
+  return 'la receta';
+};
+
 // Función para detectar si una línea es un título de receta
 const esTituloReceta = (linea) => {
   const palabrasClave = [
@@ -216,6 +236,10 @@ const RecetaCard = ({ receta, similares, tipo = "generada" }) => {
     similares: similares ? new Array(similares.length).fill(false) : []
   });
   const [showCookingMode, setShowCookingMode] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
+
+  // Extraer el título de la receta para usar en la imagen
+  const tituloReceta = extraerTituloReceta(receta.texto_receta || receta);
 
   useEffect(() => {
     const cargarFavoritos = async () => {
@@ -352,16 +376,20 @@ const RecetaCard = ({ receta, similares, tipo = "generada" }) => {
           <div className="relative">
             <img
               src={`${API_BASE_URL}/imagenes/${receta.imagen_id}`}
-              alt={`Imagen generada de ${receta.nombre || 'la receta'}`}
-              className="w-full h-64 sm:h-80 object-cover"
+              alt={`Imagen generada de ${tituloReceta}`}
+              className="w-full h-64 sm:h-80 object-cover cursor-pointer hover:opacity-90 transition-opacity"
               loading="lazy"
               style={{ borderBottom: "4px solid #22c55e" }}
+              onClick={() => setShowImageModal(true)}
             />
             <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-1">
               <span className="text-sm font-medium text-gray-800 flex items-center gap-1">
                 <ImageIcon className="w-4 h-4" />
                 Imagen generada con IA
               </span>
+            </div>
+            <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm rounded-lg px-2 py-1">
+              <span className="text-white text-xs">Clic para ampliar</span>
             </div>
           </div>
         )}
@@ -435,6 +463,39 @@ const RecetaCard = ({ receta, similares, tipo = "generada" }) => {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Modal para mostrar imagen en tamaño completo */}
+      {showImageModal && tipo === "generada" && receta.imagen_id && (
+        <div 
+          className="fixed top-0 left-0 w-screen h-screen z-50 flex items-center justify-center bg-black/80"
+          style={{ margin: 0, padding: 0 }}
+          onClick={() => setShowImageModal(false)}
+        >
+          <div className="relative w-full h-full flex items-center justify-center p-4">
+            <img
+              src={`${API_BASE_URL}/imagenes/${receta.imagen_id}`}
+              alt={`Imagen generada de ${tituloReceta}`}
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <button
+              onClick={() => setShowImageModal(false)}
+              className="absolute top-4 right-4 bg-white/90 hover:bg-white text-gray-800 rounded-full p-2 shadow-lg transition-all"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2">
+              <p className="text-sm font-medium text-gray-800">{tituloReceta}</p>
+              <p className="text-xs text-gray-600 flex items-center gap-1 mt-1">
+                <ImageIcon className="w-3 h-3" />
+                Imagen generada con IA
+              </p>
+            </div>
           </div>
         </div>
       )}
