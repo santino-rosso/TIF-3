@@ -474,13 +474,24 @@ const RecetaCard = ({ receta, similares, tipo = "generada" }) => {
           style={{ margin: 0, padding: 0 }}
           onClick={() => setShowImageModal(false)}
         >
-          <div className="relative w-full h-full flex items-center justify-center p-4">
+          <div className="relative max-w-5xl w-full max-h-[90vh]">
             <img
               src={`${API_BASE_URL}/imagenes/${receta.imagen_id}`}
               alt={`Imagen generada de ${tituloReceta}`}
-              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+              className="w-full max-h-[90vh] object-cover rounded-lg shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             />
+
+            {/* Texto abajo a la izquierda */}
+            <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2">
+              <p className="text-sm font-medium text-gray-800">{tituloReceta}</p>
+              <p className="text-xs text-gray-600 flex items-center gap-1 mt-1">
+                <ImageIcon className="w-3 h-3" />
+                Imagen generada con IA
+              </p>
+            </div>
+
+            {/* Botón cerrar arriba a la derecha */}
             <button
               onClick={() => setShowImageModal(false)}
               className="absolute top-4 right-4 bg-white/90 hover:bg-white text-gray-800 rounded-full p-2 shadow-lg transition-all"
@@ -489,13 +500,6 @@ const RecetaCard = ({ receta, similares, tipo = "generada" }) => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2">
-              <p className="text-sm font-medium text-gray-800">{tituloReceta}</p>
-              <p className="text-xs text-gray-600 flex items-center gap-1 mt-1">
-                <ImageIcon className="w-3 h-3" />
-                Imagen generada con IA
-              </p>
-            </div>
           </div>
         </div>
       )}
