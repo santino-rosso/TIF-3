@@ -1,16 +1,17 @@
 from fastapi import APIRouter, File, UploadFile
 from fastapi.responses import JSONResponse
-from app.services.gemini_service import generar_receta_gemini, detectar_ingredientes_gemini, validar_y_adaptar_receta_con_gemini
+from app.services.gemini_service import generar_receta_gemini, detectar_ingredientes_gemini, validar_y_adaptar_receta_con_gemini, generar_imagen_receta
 from app.services.embedding_service import generar_embedding
 from app.db.receta_repository import guardar_receta, buscar_recetas_similares
 from app.utils.receta_serializer import serializar_receta
-from app.utils.prompt_builder import formato_prompt_generar_receta, formato_prompt_detectar_ingredientes, formato_prompt_validar_receta
+from app.utils.prompt_builder import formato_prompt_generar_receta, formato_prompt_detectar_ingredientes, formato_prompt_validar_receta, formato_prompt_generar_imagen
 from app.models.receta_model import DatosReceta
 from fastapi import Depends
 from app.services.auth_service import get_current_user
 from app.kag.validador import validar_ingredientes_con_restricciones
 from fastapi import Form
 from app.services.recomendador_service import obtener_recomendaciones_por_favoritos
+from app.utils.extraer_nombre_receta import extraer_nombre
 
 router = APIRouter()
 
@@ -73,6 +74,11 @@ async def generar_receta(ingredientes: str = Form(""), preferencias: str = Form(
     prompt_validar = formato_prompt_validar_receta(receta_generada, datos_receta)
     receta_final = await validar_y_adaptar_receta_con_gemini(prompt_validar)
     
+    # Generar imagen de la receta
+    nombre_receta = extraer_nombre(receta_final)
+    prompt_imagen = formato_prompt_generar_imagen(nombre_receta, datos_receta.ingredientes)
+    imagen_bytes = await generar_imagen_receta(prompt_imagen)
+
     # Generar embedding para la receta
     embedding = generar_embedding(receta_final)
 
@@ -84,10 +90,11 @@ async def generar_receta(ingredientes: str = Form(""), preferencias: str = Form(
 
     if not receta_duplicada:
         print("Receta no duplicada, guardando en la base de datos.")
-        receta_id = await guardar_receta(receta_final, embedding)
+        receta_id, imagen_id = await guardar_receta(receta_final, embedding, imagen_bytes, nombre_receta)
         receta_generada_obj = {
             "_id": receta_id,
             "texto_receta": receta_final,
+            "imagen_id": imagen_id  
         } 
     else:
         print("Receta duplicada, se utilizara la receta existente.")

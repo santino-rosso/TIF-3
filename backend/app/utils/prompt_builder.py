@@ -146,3 +146,11 @@ def formato_prompt_validar_receta(receta_texto: str, datos_usuario: DatosReceta)
         """
     prompt = prompt.strip()
     return prompt
+
+def formato_prompt_generar_imagen(nombre_receta: str, ingredientes_principales: str) -> str:
+    prompt_imagen = f"""Create a beautiful, appetizing, high-quality food photography image of {nombre_receta}. 
+    The dish should feature {ingredientes_principales} as main ingredients. 
+    The image should be professionally styled with good lighting, showing the finished dish on an elegant plate or serving dish. 
+    Make it look delicious and Instagram-worthy. The style should be realistic food photography, not cartoon or illustration."""
+    
+    return prompt_imagen.strip()

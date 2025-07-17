@@ -1,4 +1,4 @@
-from motor.motor_asyncio import AsyncIOMotorClient
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorGridFSBucket
 from app.config import settings
 
 # Configuración de la conexión a MongoDB
@@ -7,6 +7,9 @@ db = client["receya_db"]
 recetas_collection = db["recetas"]
 usuarios_collection = db["usuarios"]
 tokens_collection = db["tokens"]
+
+# GridFS bucket para manejar archivos de imágenes
+gridfs_bucket = AsyncIOMotorGridFSBucket(db)
 
 async def create_index():
     # Crear un índice único en el campo "email" de la colección "usuarios"

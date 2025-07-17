@@ -1,16 +1,31 @@
-from app.db.mongo_client import recetas_collection
+from app.db.mongo_client import recetas_collection, gridfs_bucket
 from datetime import datetime
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+from io import BytesIO
 
-async def guardar_receta(receta_texto, embedding):
+async def guardar_receta(receta_texto, embedding, imagen_bytes, nombre_receta):
+    # Guardar imagen en GridFS si existe
+    imagen_id = None
+    if imagen_bytes:
+        # Convertir bytes a BytesIO para GridFS
+        imagen_stream = BytesIO(imagen_bytes)
+        imagen_id = await gridfs_bucket.upload_from_stream(
+            filename=f"receta_{nombre_receta}.png",
+            source=imagen_stream,
+            metadata={"content_type": "image/png"}
+        )
+    
     receta_documento = {
         "texto_receta": receta_texto,
         "embedding": embedding,
+        "imagen_id": str(imagen_id) if imagen_id else None,
         "fecha": datetime.now()
     }
     resultado = await recetas_collection.insert_one(receta_documento)
-    return str(resultado.inserted_id)
+    
+    # Devolver tanto el ID de la receta como el ID de la imagen
+    return str(resultado.inserted_id), str(imagen_id) if imagen_id else None
 
 async def buscar_recetas_similares(embedding_actual, top_k=3):
 

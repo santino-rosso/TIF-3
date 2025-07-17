@@ -2,8 +2,11 @@ import axios from "axios";
 import { refreshAccessToken } from "../utils/auth";
 import { Navigate } from "react-router-dom";
 
+// Exportar la base URL para reutilizar en otros componentes
+export const API_BASE_URL = "http://localhost:8000/api";
+
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:8000/api",
+  baseURL: API_BASE_URL,
 });
 
 let isRefreshing = false;

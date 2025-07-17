@@ -1,4 +1,4 @@
-import axiosInstance from "../utils/axiosInstance";
+import axiosInstance, { API_BASE_URL } from "../utils/axiosInstance";
 import { useEffect, useState } from "react";
 import "../styles/recetas.css";
 import CookingMode from './CookingMode';
@@ -14,7 +14,8 @@ import {
   AlertTriangle,
   FileText,
   Star,
-  Repeat
+  Repeat,
+  ImageIcon
 } from 'lucide-react';
 
 // Función para detectar si una línea es un título de receta
@@ -345,6 +346,25 @@ const RecetaCard = ({ receta, similares, tipo = "generada" }) => {
             </div>
           </div>
         </div>
+
+        {/* Imagen SOLO para la receta generada */}
+        {tipo === "generada" && receta.imagen_id && (
+          <div className="relative">
+            <img
+              src={`${API_BASE_URL}/imagenes/${receta.imagen_id}`}
+              alt={`Imagen generada de ${receta.nombre || 'la receta'}`}
+              className="w-full h-64 sm:h-80 object-cover"
+              loading="lazy"
+              style={{ borderBottom: "4px solid #22c55e" }}
+            />
+            <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-1">
+              <span className="text-sm font-medium text-gray-800 flex items-center gap-1">
+                <ImageIcon className="w-4 h-4" />
+                Imagen generada con IA
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Contenido de la receta */}
         <div className="p-6">

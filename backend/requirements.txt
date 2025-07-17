@@ -3,7 +3,7 @@ uvicorn
 motor
 numpy
 sentence-transformers
-google-generativeai
+google-genai
 python-dotenv
 python-multipart
 pydantic-settings
@@ -13,3 +13,4 @@ passlib[bcrypt]
 python-jose[cryptography]
 email-validator
 networkx
+Pillow
