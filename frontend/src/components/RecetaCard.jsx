@@ -372,7 +372,7 @@ const RecetaCard = ({ receta, similares, tipo = "generada" }) => {
         </div>
 
         {/* Imagen SOLO para la receta generada */}
-        {tipo === "generada" && receta.imagen_id && (
+        {(tipo === "generada" || tipo === "favorita" || tipo === "recomendada") && receta.imagen_id && (
           <div className="relative">
             <img
               src={`${API_BASE_URL}/imagenes/${receta.imagen_id}`}
@@ -468,7 +468,7 @@ const RecetaCard = ({ receta, similares, tipo = "generada" }) => {
       )}
 
       {/* Modal para mostrar imagen en tamaño completo */}
-      {showImageModal && tipo === "generada" && receta.imagen_id && (
+      {showImageModal && (tipo === "generada" || tipo === "favorita" || tipo === "recomendada") && receta.imagen_id && (
         <div 
           className="fixed top-0 left-0 w-screen h-screen z-50 flex items-center justify-center bg-black/80"
           style={{ margin: 0, padding: 0 }}

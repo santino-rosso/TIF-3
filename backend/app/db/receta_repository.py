@@ -27,7 +27,7 @@ async def guardar_receta(receta_texto, embedding, imagen_bytes, nombre_receta):
     # Devolver tanto el ID de la receta como el ID de la imagen
     return str(resultado.inserted_id), str(imagen_id) if imagen_id else None
 
-async def buscar_recetas_similares(embedding_actual, top_k=3):
+async def buscar_recetas_similares(embedding_actual, top_k=4):
 
     simulitud_maxima = 0.98  # umbral para evitar recetas "casi iguales"
 
