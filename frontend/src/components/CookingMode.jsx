@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import './CookingMode.css';
 
-const CookingMode = ({ recipe, onExit }) => {
+const CookingMode = ({ recipe, titulo, onExit }) => {
   const [showCompletion, setShowCompletion] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [activeTimer, setActiveTimer] = useState(null);
@@ -442,6 +442,11 @@ const CookingMode = ({ recipe, onExit }) => {
   const suggestedTime = extractTimeFromStep(currentInstruction);
   const progress = ((currentStep + 1) / instructions.length) * 100;
 
+  // Función específica para cerrar solo la pantalla de finalización
+  const closeCompletion = () => {
+    setShowCompletion(false);
+  };
+
   return (
     <div className="cooking-mode">
       <div className="cooking-header">
@@ -558,11 +563,36 @@ const CookingMode = ({ recipe, onExit }) => {
 
       {showCompletion && (
         <div className="completion-card">
-          <h3>🎉 ¡Receta completada!</h3>
-          <p>¡Felicitaciones! Has terminado de cocinar {recipe.nombre || recipe.title}</p>
-          <button onClick={onExit} className="btn-finish">
-            Finalizar cocina
-          </button>
+          <h3>¡Receta completada!</h3>
+          <p>¡Felicitaciones! Has terminado de cocinar {titulo}</p>
+          
+          {/* Mostrar imagen de la receta si existe */}
+          {recipe.imagen_id && (
+            <div className="completion-image">
+              <img
+                src={`http://localhost:8000/api/imagenes/${recipe.imagen_id}`}
+                alt={`Imagen de ${titulo}`}
+                className="recipe-completion-image"
+              />
+              <div className="image-caption">
+                <span>📸 Imagen generada con IA</span>
+              </div>
+            </div>
+          )}
+          
+          {/* Botones de acción */}
+          <div className="completion-actions">
+            <button 
+              onClick={closeCompletion} 
+              className="btn-previous"
+            >
+              Volver
+            </button>
+            
+            <button onClick={onExit} className="btn-finish">
+              Finalizar cocina
+            </button>
+          </div>
         </div>
       )}
     </div>

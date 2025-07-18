@@ -293,7 +293,13 @@ const RecetaCard = ({ receta, similares, tipo = "generada" }) => {
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }
-    setShowCookingMode(recipe || receta);
+
+    const recipeWithTitle = {
+      ...receta,
+      titulo: tituloReceta
+    };
+
+    setShowCookingMode(recipeWithTitle);
   };
 
   // Si está en modo cocina, mostrar el componente CookingMode
@@ -301,6 +307,7 @@ const RecetaCard = ({ receta, similares, tipo = "generada" }) => {
     return (
       <CookingMode 
         recipe={showCookingMode} 
+        titleRecipe={showCookingMode.titulo}
         onExit={() => setShowCookingMode(false)} 
       />
     );
@@ -427,7 +434,13 @@ const RecetaCard = ({ receta, similares, tipo = "generada" }) => {
                     </h4>
                     <div className="flex gap-2">
                       <button
-                        onClick={() => setShowCookingMode(rec)}
+                        onClick={() => {
+                          const recipeWithTitle = {
+                            ...rec,
+                            titulo: extraerTituloReceta(rec.texto_receta)
+                          };
+                          setShowCookingMode(recipeWithTitle);
+                        }}
                         className="flex items-center gap-1 px-3 py-1 rounded-md text-sm font-medium transition-all bg-blue-500 hover:bg-blue-600 text-white"
                       >
                         <ChefHat className="w-4 h-4" />
