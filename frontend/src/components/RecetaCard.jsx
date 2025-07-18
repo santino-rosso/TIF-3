@@ -237,6 +237,7 @@ const RecetaCard = ({ receta, similares, tipo = "generada" }) => {
   });
   const [showCookingMode, setShowCookingMode] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
+  const [showSimilarImageModal, setShowSimilarImageModal] = useState({ show: false, recipe: null, index: null });
 
   // Extraer el título de la receta para usar en la imagen
   const tituloReceta = extraerTituloReceta(receta.texto_receta || receta);
@@ -466,6 +467,27 @@ const RecetaCard = ({ receta, similares, tipo = "generada" }) => {
                   </div>
                 </div>
 
+                {/* Imagen de la receta similar */}
+                {rec.imagen_id && (
+                  <div className="relative">
+                    <img
+                      src={`${API_BASE_URL}/imagenes/${rec.imagen_id}`}
+                      alt={`Imagen generada de ${extraerTituloReceta(rec.texto_receta)}`}
+                      className="w-full h-48 object-cover cursor-pointer hover:brightness-110 transition-all duration-300"
+                      onClick={() => setShowSimilarImageModal({ show: true, recipe: rec, index: idx })}
+                    />
+                    <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-1">
+                      <span className="text-sm font-medium text-gray-800 flex items-center gap-1">
+                        <ImageIcon className="w-4 h-4" />
+                        Imagen generada con IA
+                      </span>
+                    </div>
+                    <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm rounded-lg px-2 py-1">
+                      <span className="text-white text-xs">Clic para ampliar</span>
+                    </div>
+                  </div>
+                )}
+
                 {/* Contenido de receta similar */}
                 <div className="p-5">
                   <div className="receta-container bg-gray-50 rounded-lg p-4 border-l-4 border-blue-400">
@@ -507,6 +529,45 @@ const RecetaCard = ({ receta, similares, tipo = "generada" }) => {
             {/* Botón cerrar arriba a la derecha */}
             <button
               onClick={() => setShowImageModal(false)}
+              className="absolute top-4 right-4 bg-white/90 hover:bg-white text-gray-800 rounded-full p-2 shadow-lg transition-all"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para mostrar imagen de receta similar en tamaño completo */}
+      {showSimilarImageModal.show && showSimilarImageModal.recipe?.imagen_id && (
+        <div 
+          className="fixed top-0 left-0 w-screen h-screen z-50 flex items-center justify-center bg-black/80"
+          style={{ margin: 0, padding: 0 }}
+          onClick={() => setShowSimilarImageModal({ show: false, recipe: null, index: null })}
+        >
+          <div className="relative max-w-5xl w-full max-h-[90vh]">
+            <img
+              src={`${API_BASE_URL}/imagenes/${showSimilarImageModal.recipe.imagen_id}`}
+              alt={`Imagen de ${extraerTituloReceta(showSimilarImageModal.recipe.texto_receta)}`}
+              className="w-full max-h-[90vh] object-cover rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+
+            {/* Texto abajo a la izquierda */}
+            <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2">
+              <p className="text-sm font-medium text-gray-800">
+                {extraerTituloReceta(showSimilarImageModal.recipe.texto_receta)}
+              </p>
+              <p className="text-xs text-gray-600 flex items-center gap-1 mt-1">
+                <ImageIcon className="w-3 h-3" />
+                Imagen generada con IA
+              </p>
+            </div>
+
+            {/* Botón cerrar arriba a la derecha */}
+            <button
+              onClick={() => setShowSimilarImageModal({ show: false, recipe: null, index: null })}
               className="absolute top-4 right-4 bg-white/90 hover:bg-white text-gray-800 rounded-full p-2 shadow-lg transition-all"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
