@@ -7,6 +7,7 @@ import Register from "./pages/Register";
 import Favoritos from "./pages/Favoritos";
 import Perfil from "./pages/Perfil";
 import Recomendaciones from "./pages/Recomendaciones";
+import Planes from "./pages/Planes";
 
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
         <Route path="/favoritos" element={<Favoritos />} />
         <Route path="/perfil" element={<Perfil />} />
         <Route path="/recomendaciones" element={<Recomendaciones />} />
+        <Route path="/planes" element={<Planes />} />
       </Route>
     </Routes>
   );

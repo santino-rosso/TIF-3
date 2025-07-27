@@ -3,6 +3,8 @@ from fastapi.responses import JSONResponse
 from app.services.gemini_service import generar_receta_gemini, detectar_ingredientes_gemini, validar_y_adaptar_receta_con_gemini, generar_imagen_receta
 from app.services.embedding_service import generar_embedding
 from app.db.receta_repository import guardar_receta, buscar_recetas_similares
+from app.db.plan_repository import puede_generar_receta, registrar_generacion
+from app.db.user_repository import obtener_plan_usuario
 from app.utils.receta_serializer import serializar_receta
 from app.utils.prompt_builder import formato_prompt_generar_receta, formato_prompt_detectar_ingredientes, formato_prompt_validar_receta, formato_prompt_generar_imagen
 from app.models.receta_model import DatosReceta
@@ -12,12 +14,13 @@ from app.kag.validador import validar_ingredientes_con_restricciones
 from fastapi import Form
 from app.services.recomendador_service import obtener_recomendaciones_por_favoritos
 from app.utils.extraer_nombre_receta import extraer_nombre
+from app.db.plan_repository import puede_generar_receta, registrar_generacion
+from app.db.user_repository import obtener_plan_usuario
 
 router = APIRouter()
 
 @router.post("/validar-ingredientes")
-async def validar_ingredientes(restricciones: str = Form(""), ingredientes: str = Form(""), imagen: UploadFile = File(None), current_user: dict = Depends(get_current_user)):
-
+async def validar_ingredientes(restricciones: str = Form(""), ingredientes: str = Form(""), imagen: UploadFile = File(None)):
     if not ingredientes and not imagen:
         return JSONResponse(content={"error": "Se debe proporcionar al menos ingredientes o una imagen de los mismos."}, status_code=400)
 
@@ -49,6 +52,24 @@ async def validar_ingredientes(restricciones: str = Form(""), ingredientes: str 
 
 @router.post("/generar-receta")
 async def generar_receta(ingredientes: str = Form(""), preferencias: str = Form(""), restricciones: str = Form(""), tiempo: str = Form(""), tipo_comida: str = Form(""), herramientas: str = Form(""), experiencia: str = Form(""), current_user: dict = Depends(get_current_user)):
+    
+    # Verificar límites del plan antes de generar
+    try:
+        plan_usuario = await obtener_plan_usuario(current_user["email"])
+        if not plan_usuario:
+            return JSONResponse(content={"error": "No se pudo obtener el plan del usuario."}, status_code=500)
+        
+        verificacion = await puede_generar_receta(current_user["email"], plan_usuario)
+        if not verificacion["puede_generar"]:
+            return JSONResponse(content={
+                "error": "Límite de generaciones alcanzado",
+                "detalle": verificacion["razon"],
+                "generaciones_usadas": verificacion.get("generaciones_usadas", 0),
+                "limite": verificacion.get("limite", 0),
+                "tipo": "limite_alcanzado"
+            }, status_code=403)
+    except Exception as e:
+        return JSONResponse(content={"error": f"Error al verificar límites: {str(e)}"}, status_code=500)
    
     datos_receta = DatosReceta(
         preferencias=preferencias,
@@ -101,6 +122,13 @@ async def generar_receta(ingredientes: str = Form(""), preferencias: str = Form(
         receta_generada_obj = receta_duplicada
 
     recetas_similares_serializadas = [serializar_receta(r) for r in recetas_similares]
+
+    # Registrar la generación para el conteo del plan
+    try:
+        receta_id_para_registro = receta_generada_obj.get("_id")
+        await registrar_generacion(current_user["email"], receta_id_para_registro)
+    except Exception as e:
+        print(f"Error al registrar generación: {str(e)}")
 
     # Retornar la receta generada y las recetas similares
     return JSONResponse(content={

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
 import Navbar from "../components/Navbar";
+import { Crown } from "lucide-react";
 
 const Perfil = () => {
   const [email, setEmail] = useState("");
@@ -63,7 +64,7 @@ const Perfil = () => {
             </span>
           </div>
 
-          <form onSubmit={handleChangePassword} className="mb-8">
+          <form onSubmit={handleChangePassword} className="mb-6">
             <label className="block mb-2 text-sm font-medium text-gray-700">Nueva Contraseña</label>
             <input
               type="password"
@@ -80,6 +81,15 @@ const Perfil = () => {
               Cambiar Contraseña
             </button>
           </form>
+
+          {/* Enlace a Mi Plan */}
+          <Link 
+            to="/planes"
+            className="w-full bg-yellow-500 text-white hover:text-white px-4 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition-colors shadow mb-6 flex items-center justify-center gap-2"
+          >
+            <Crown className="w-5 h-5" />
+            Mi Plan de Membresía
+          </Link>
 
           <button
             onClick={handleEliminarCuenta}

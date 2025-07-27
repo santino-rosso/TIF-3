@@ -4,9 +4,12 @@ from app.config import settings
 # Configuración de la conexión a MongoDB
 client = AsyncIOMotorClient(settings.mongo_uri)
 db = client["receya_db"]
+# Colecciones
 recetas_collection = db["recetas"]
 usuarios_collection = db["usuarios"]
 tokens_collection = db["tokens"]
+planes_collection = db["planes"]
+generaciones_collection = db["generaciones"]
 
 # GridFS bucket para manejar archivos de imágenes
 gridfs_bucket = AsyncIOMotorGridFSBucket(db)
