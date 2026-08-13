@@ -20,7 +20,7 @@ const Recomendaciones = () => {
         {recetas.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
             <p className="text-lg text-gray-600 mb-6">No hay recomendaciones disponibles en este momento.</p>
-            <img src="/vite.svg" alt="Sin recomendaciones" className="w-32 opacity-60" />
+            <img src="/Reseya.png" alt="Sin recomendaciones" className="w-32 opacity-60" />
           </div>
         ) : (
           <div className="flex flex-col gap-8">

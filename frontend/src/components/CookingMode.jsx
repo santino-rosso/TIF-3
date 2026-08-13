@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { 
   Play, 
   Pause, 
@@ -28,28 +28,29 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
   const speechSynthesisRef = useRef(null);
   const isRecognitionActiveRef = useRef(false);
   const isListeningRef = useRef(false);
+  const autoReadRef = useRef(true);
   const currentStepRef = useRef(0);
   const instructionsRef = useRef([]);
   const isTimerRunningRef = useRef(false);
 
   // Extraer instrucciones de la receta
-  const parseInstructions = (recipeText) => {
+  const parseInstructions = useCallback((recipeText) => {
     if (!recipeText) return [];
-    
+
     const lines = recipeText.split('\n');
     const instructions = [];
     let inInstructionsSection = false;
-    
+
     for (const line of lines) {
       const cleanLine = line.trim();
       if (!cleanLine) continue;
-      
+
       // Detectar sección de instrucciones/preparación (con ** o sin **)
       if (/^(\*\*)?(preparación|instrucciones|procedimiento|elaboración)(\*\*)?:?/i.test(cleanLine)) {
         inInstructionsSection = true;
         continue;
       }
-      
+
       // Si encontramos otra sección, salir
       if (inInstructionsSection && /^(\*\*)?(ingredientes|notas|consejos|tiempo|utensilios|preferencias|restricciones|tipo de comida|herramientas|nivel de experiencia)(\*\*)?:?/i.test(cleanLine)) {
         break;
@@ -71,7 +72,7 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
         }
       }
     }
-    
+
     // Si no encontramos instrucciones específicas, intentar extraer pasos numerados de toda la receta
     if (instructions.length === 0) {
       for (const line of lines) {
@@ -84,16 +85,21 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
         }
       }
     }
-    
-    return instructions.length > 0 ? instructions : ['No hay instrucciones disponibles. Por favor, revisa el formato de la receta.'];
-  };
 
-  const instructions = parseInstructions(recipe.texto_receta || recipe.receta || recipe.description || '');
+    return instructions.length > 0 ? instructions : ['No hay instrucciones disponibles. Por favor, revisa el formato de la receta.'];
+  }, []);
+
+  const recipeText = recipe.texto_receta || recipe.receta || recipe.description || '';
+  const instructions = useMemo(() => parseInstructions(recipeText), [parseInstructions, recipeText]);
 
   // Mantener refs actualizados
   useEffect(() => {
     isListeningRef.current = isListening;
   }, [isListening]);
+
+  useEffect(() => {
+    autoReadRef.current = autoRead;
+  }, [autoRead]);
 
   useEffect(() => {
     currentStepRef.current = currentStep;
@@ -130,99 +136,96 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
     };
   }, []);
 
-  // Configurar reconocimiento de voz
-  useEffect(() => {
-    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = true;
-      recognitionRef.current.interimResults = false;
-      recognitionRef.current.lang = 'es-ES';
-      
-      recognitionRef.current.onstart = () => {
-        console.log('Reconocimiento de voz iniciado');
-        isRecognitionActiveRef.current = true;
-        setIsListening(true);
-      };
+  const startRecognition = useCallback(() => {
+    if (!recognitionRef.current || isRecognitionActiveRef.current) return;
 
-      recognitionRef.current.onend = () => {
-        console.log('Reconocimiento de voz terminado');
-        isRecognitionActiveRef.current = false;
-        // Solo reiniciar si el usuario quiere seguir escuchando
-        if (isListeningRef.current) {
+    try {
+      recognitionRef.current.start();
+      console.log('Intentando iniciar reconocimiento...');
+    } catch (error) {
+      console.error('Error al iniciar reconocimiento:', error);
+      setIsListening(false);
+      isRecognitionActiveRef.current = false;
+    }
+  }, []);
+
+  const stopRecognition = useCallback(() => {
+    if (!recognitionRef.current || !isRecognitionActiveRef.current) return;
+
+    try {
+      recognitionRef.current.stop();
+      console.log('Deteniendo reconocimiento...');
+    } catch (error) {
+      console.error('Error al detener reconocimiento:', error);
+    }
+  }, []);
+
+  const speak = useCallback((text) => {
+    if (speechSynthesisRef.current && text) {
+      // Pausar reconocimiento temporalmente durante la síntesis
+      const wasListening = isListeningRef.current;
+      if (wasListening && isRecognitionActiveRef.current) {
+        stopRecognition();
+      }
+
+      speechSynthesisRef.current.cancel(); // Cancelar cualquier síntesis anterior
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'es-ES';
+      utterance.rate = 0.9;
+
+      utterance.onend = () => {
+        // Reanudar reconocimiento después de que termine la síntesis
+        if (wasListening) {
           setTimeout(() => {
             if (isListeningRef.current && !isRecognitionActiveRef.current) {
               startRecognition();
             }
-          }, 100);
-        } else {
-          setIsListening(false);
+          }, 500); // Pequeña pausa para evitar detectar ecos
         }
       };
 
-      recognitionRef.current.onerror = (event) => {
-        console.error('Error en reconocimiento de voz:', event.error);
-        isRecognitionActiveRef.current = false;
-        setIsListening(false);
-        
-        if (event.error === 'not-allowed') {
-          alert('Permisos de micrófono denegados. Por favor, permite el acceso al micrófono.');
-        } else if (event.error === 'no-speech') {
-          console.log('No se detectó habla, reintentando...');
+      utterance.onerror = () => {
+        // Reanudar reconocimiento si hay error
+        if (wasListening) {
+          setTimeout(() => {
+            if (isListeningRef.current && !isRecognitionActiveRef.current) {
+              startRecognition();
+            }
+          }, 500);
         }
       };
-      
-      recognitionRef.current.onresult = (event) => {
-        const command = event.results[event.results.length - 1][0].transcript.toLowerCase();
-        console.log('Comando detectado:', command);
-        handleVoiceCommand(command);
-      };
 
-      setVoiceSupported(true);
+      speechSynthesisRef.current.speak(utterance);
     }
+  }, [startRecognition, stopRecognition]);
 
-    // Configurar síntesis de voz
-    if ('speechSynthesis' in window) {
-      speechSynthesisRef.current = window.speechSynthesis;
-    }
-
-    return () => {
-      if (recognitionRef.current && isRecognitionActiveRef.current) {
-        recognitionRef.current.stop();
-        isRecognitionActiveRef.current = false;
-      }
-    };
+  const pauseTimer = useCallback(() => {
+    setIsTimerRunning(prev => !prev);
   }, []);
 
-  // Gestión de temporizadores
-  useEffect(() => {
-    let interval = null;
-    if (isTimerRunning && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft(timeLeft => {
-          if (timeLeft <= 1) {
-            setIsTimerRunning(false);
-            showTimerNotification();
-            return 0;
-          }
-          return timeLeft - 1;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isTimerRunning, timeLeft]);
+  const resetTimer = useCallback(() => {
+    setIsTimerRunning(false);
+    setTimeLeft(0);
+    setActiveTimer(null);
+  }, []);
 
-  // Lectura automática solo cuando cambia el paso
-  useEffect(() => {
-    if (autoRead && instructions[currentStep]) {
-      const timer = setTimeout(() => {
-        speak(instructions[currentStep]);
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [currentStep]);
+  const extractTimeFromStep = useCallback((instruction) => {
+    const timeRegex = /(\d+)\s*(minutos?|min|horas?|h)/gi;
+    const matches = instruction.match(timeRegex);
+    if (matches) {
+      const timeStr = matches[0];
+      const number = parseInt(timeStr.match(/\d+/)[0]);
+      const unit = timeStr.toLowerCase();
 
-  const handleVoiceCommand = (command) => {
+      if (unit.includes('hora') || unit.includes('h')) {
+        return number * 60;
+      }
+      return number;
+    }
+    return null;
+  }, []);
+
+  const handleVoiceCommand = useCallback((command) => {
     console.log('Comando de voz:', command);
     console.log('Paso actual:', currentStepRef.current);
     
@@ -266,70 +269,7 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
         speak('Temporizador reanudado');
       }
     }
-  };
-
-  const speak = (text) => {
-    if (speechSynthesisRef.current && text) {
-      // Pausar reconocimiento temporalmente durante la síntesis
-      const wasListening = isListeningRef.current;
-      if (wasListening && isRecognitionActiveRef.current) {
-        stopRecognition();
-      }
-
-      speechSynthesisRef.current.cancel(); // Cancelar cualquier síntesis anterior
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'es-ES';
-      utterance.rate = 0.9;
-      
-      utterance.onend = () => {
-        // Reanudar reconocimiento después de que termine la síntesis
-        if (wasListening) {
-          setTimeout(() => {
-            if (isListeningRef.current && !isRecognitionActiveRef.current) {
-              startRecognition();
-            }
-          }, 500); // Pequeña pausa para evitar detectar ecos
-        }
-      };
-
-      utterance.onerror = () => {
-        // Reanudar reconocimiento si hay error
-        if (wasListening) {
-          setTimeout(() => {
-            if (isListeningRef.current && !isRecognitionActiveRef.current) {
-              startRecognition();
-            }
-          }, 500);
-        }
-      };
-
-      speechSynthesisRef.current.speak(utterance);
-    }
-  };
-
-  const startRecognition = () => {
-    if (!recognitionRef.current || isRecognitionActiveRef.current) return;
-    
-    try {
-      recognitionRef.current.start();
-      console.log('Intentando iniciar reconocimiento...');
-    } catch (error) {
-      console.error('Error al iniciar reconocimiento:', error);
-      setIsListening(false);
-      isRecognitionActiveRef.current = false;
-    }
-  };
-
-  const stopRecognition = () => {
-    if (!recognitionRef.current || !isRecognitionActiveRef.current) return;
-    
-    try {
-      recognitionRef.current.stop();
-      console.log('Deteniendo reconocimiento...');
-    } catch (error) {
-      console.error('Error al detener reconocimiento:', error);
-    }
-  };
+  }, [extractTimeFromStep, pauseTimer, resetTimer, speak]);
 
   const toggleVoiceRecognition = () => {
     if (!voiceSupported) {
@@ -348,7 +288,7 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
     }
   };
 
-  const showTimerNotification = () => {
+  const showTimerNotification = useCallback(() => {
     // Vibración
     if ('vibrate' in navigator) {
       navigator.vibrate([200, 100, 200, 100, 200]);
@@ -358,14 +298,14 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification('⏰ ¡Tiempo terminado!', {
         body: `Paso ${currentStep + 1} completado`,
-        icon: '/vite.svg',
+        icon: '/Reseya.png',
         vibrate: [200, 100, 200]
       });
     }
     
     // Síntesis de voz
     speak('Tiempo terminado');
-  };
+  }, [currentStep, speak]);
 
   const startTimer = (minutes) => {
     const seconds = minutes * 60;
@@ -373,16 +313,6 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
     setActiveTimer(currentStep);
     setIsTimerRunning(true);
     speak(`Temporizador iniciado por ${minutes} minutos`);
-  };
-
-  const pauseTimer = () => {
-    setIsTimerRunning(prev => !prev);
-  };
-
-  const resetTimer = () => {
-    setIsTimerRunning(false);
-    setTimeLeft(0);
-    setActiveTimer(null);
   };
 
   const nextStep = () => {
@@ -422,21 +352,97 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const extractTimeFromStep = (instruction) => {
-    const timeRegex = /(\d+)\s*(minutos?|min|horas?|h)/gi;
-    const matches = instruction.match(timeRegex);
-    if (matches) {
-      const timeStr = matches[0];
-      const number = parseInt(timeStr.match(/\d+/)[0]);
-      const unit = timeStr.toLowerCase();
+  // Configurar reconocimiento de voz
+  useEffect(() => {
+    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = true;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = 'es-ES';
       
-      if (unit.includes('hora') || unit.includes('h')) {
-        return number * 60;
-      }
-      return number;
+      recognitionRef.current.onstart = () => {
+        console.log('Reconocimiento de voz iniciado');
+        isRecognitionActiveRef.current = true;
+        setIsListening(true);
+      };
+
+      recognitionRef.current.onend = () => {
+        console.log('Reconocimiento de voz terminado');
+        isRecognitionActiveRef.current = false;
+        // Solo reiniciar si el usuario quiere seguir escuchando
+        if (isListeningRef.current) {
+          setTimeout(() => {
+            if (isListeningRef.current && !isRecognitionActiveRef.current) {
+              startRecognition();
+            }
+          }, 100);
+        } else {
+          setIsListening(false);
+        }
+      };
+
+      recognitionRef.current.onerror = (event) => {
+        console.error('Error en reconocimiento de voz:', event.error);
+        isRecognitionActiveRef.current = false;
+        setIsListening(false);
+
+        if (event.error === 'not-allowed') {
+          alert('Permisos de micrófono denegados. Por favor, permite el acceso al micrófono.');
+        } else if (event.error === 'no-speech') {
+          console.log('No se detectó habla, reintentando...');
+        }
+      };
+
+      recognitionRef.current.onresult = (event) => {
+        const command = event.results[event.results.length - 1][0].transcript.toLowerCase();
+        console.log('Comando detectado:', command);
+        handleVoiceCommand(command);
+      };
+
+      setVoiceSupported(true);
     }
-    return null;
-  };
+
+    // Configurar síntesis de voz
+    if ('speechSynthesis' in window) {
+      speechSynthesisRef.current = window.speechSynthesis;
+    }
+
+    return () => {
+      if (recognitionRef.current && isRecognitionActiveRef.current) {
+        recognitionRef.current.stop();
+        isRecognitionActiveRef.current = false;
+      }
+    };
+  }, [handleVoiceCommand, startRecognition]);
+
+  // Gestión de temporizadores
+  useEffect(() => {
+    let interval = null;
+    if (isTimerRunning && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft(timeLeft => {
+          if (timeLeft <= 1) {
+            setIsTimerRunning(false);
+            showTimerNotification();
+            return 0;
+          }
+          return timeLeft - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isTimerRunning, timeLeft, showTimerNotification]);
+
+  // Lectura automática solo cuando cambia el paso
+  useEffect(() => {
+    if (autoReadRef.current && instructionsRef.current[currentStep]) {
+      const timer = setTimeout(() => {
+        speak(instructionsRef.current[currentStep]);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [currentStep, speak]);
 
   const currentInstruction = instructions[currentStep] || 'No hay instrucciones disponibles';
   const suggestedTime = extractTimeFromStep(currentInstruction);

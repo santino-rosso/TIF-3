@@ -10,7 +10,7 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}']
       },
-      includeAssets: ['vite.svg'],
+      includeAssets: ['Reseya.png'],
       manifest: {
         name: 'ReceYa',
         short_name: 'ReceYa',
@@ -21,9 +21,9 @@ export default defineConfig({
         theme_color: '#10b981',
         icons: [
           {
-            src: 'vite.svg',
+            src: 'Reseya.png',
             sizes: '192x192',
-            type: 'image/svg+xml',
+            type: 'image/png',
             purpose: 'any maskable'
           }
         ]

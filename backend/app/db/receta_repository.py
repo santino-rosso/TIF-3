@@ -4,16 +4,26 @@ from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 from io import BytesIO
 
+def obtener_metadata_imagen(imagen_bytes):
+    if imagen_bytes.startswith(b"\xff\xd8\xff"):
+        return "jpg", "image/jpeg"
+    if imagen_bytes.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "png", "image/png"
+    if imagen_bytes.startswith(b"RIFF") and imagen_bytes[8:12] == b"WEBP":
+        return "webp", "image/webp"
+    return "bin", "application/octet-stream"
+
 async def guardar_receta(receta_texto, embedding, imagen_bytes, nombre_receta):
     # Guardar imagen en GridFS si existe
     imagen_id = None
     if imagen_bytes:
+        extension, content_type = obtener_metadata_imagen(imagen_bytes)
         # Convertir bytes a BytesIO para GridFS
         imagen_stream = BytesIO(imagen_bytes)
         imagen_id = await gridfs_bucket.upload_from_stream(
-            filename=f"receta_{nombre_receta}.png",
+            filename=f"receta_{nombre_receta}.{extension}",
             source=imagen_stream,
-            metadata={"content_type": "image/png"}
+            metadata={"content_type": content_type}
         )
     
     receta_documento = {

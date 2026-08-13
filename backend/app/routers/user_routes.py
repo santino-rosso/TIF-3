@@ -1,10 +1,8 @@
-from fastapi import APIRouter, HTTPException, Depends, Form
+from fastapi import APIRouter, HTTPException, Depends
 from app.services.auth_service import hash_password, verify_password, create_access_token, get_current_user, create_refresh_token, refresh_access_token
 from app.db.user_repository import get_user_by_email, create_user, update_user_password, delete_user_by_email
 from app.models.usuario_model import UserCreate, UserUpdatePassword, UserPublic, UserDB, UserLogout
 from fastapi.security import OAuth2PasswordRequestForm
-from app.utils.receta_serializer import serializar_receta
-from app.db.user_repository import obtener_favoritos
 from app.db.token_repository import eliminar_refresh_token_de_usuario, guardar_refresh_token
 
 router = APIRouter()

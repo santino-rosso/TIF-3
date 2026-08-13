@@ -5,7 +5,7 @@ import Navbar from "../components/Navbar";
 import { Crown, Zap, CheckCircle, XCircle } from "lucide-react";
 
 const Planes = () => {
-  const [planActual, setPlanActual] = useState(null);
+  const [, setPlanActual] = useState(null);
   const [estadisticas, setEstadisticas] = useState(null);
   const [planesDisponibles, setPlanesDisponibles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -111,7 +111,7 @@ const Planes = () => {
                 <div className="space-y-3">
                   <div>
                     <div className="flex justify-between text-sm mb-1 text-gray-700">
-                      <span>Recetas generadas este mes:</span>
+                      <span>Recetas generadas en el período actual:</span>
                       <span className="font-semibold text-gray-800">{estadisticas.generaciones_usadas} / {estadisticas.limite_generaciones}</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-3">
@@ -172,7 +172,7 @@ const Planes = () => {
                 <div className="space-y-3 mb-6 min-h-[204px]">
                   <div className="flex items-center gap-2">
                     <CheckCircle className="w-5 h-5 text-green-500" />
-                    <span className="text-gray-700">{plan.limite_generaciones_mensual} recetas por mes</span>
+                    <span className="text-gray-700">{plan.limite_generaciones_mensual} recetas cada 30 días</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle className="w-5 h-5 text-green-500" />
@@ -237,7 +237,7 @@ const Planes = () => {
         <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
           <h3 className="text-lg font-semibold text-blue-800 mb-2">¿Necesitás más recetas?</h3>
           <p className="text-blue-600 mb-4">
-            Con el plan Premium podés generar hasta 100 recetas por mes, perfecto para chefs experimentados y familias numerosas.
+            Con el plan Premium podés generar hasta 100 recetas cada 30 días, perfecto para chefs experimentados y familias numerosas.
           </p>
           <button
             onClick={() => navigate("/")}

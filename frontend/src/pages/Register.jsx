@@ -13,7 +13,7 @@ const Register = () => {
         e.preventDefault();
         setError("");
         try {
-            const response = await axiosInstance.post("/register", {
+            await axiosInstance.post("/register", {
                 email: email,
                 password: password,
               });

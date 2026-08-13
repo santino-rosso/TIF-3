@@ -1,3 +1,8 @@
+import base64
+import json
+import urllib.error
+import urllib.request
+
 from google import genai
 from google.genai import types
 from PIL import Image
@@ -11,8 +16,8 @@ if not api_key:
 # Configurar el cliente Gemini
 client = genai.Client(api_key=api_key)
 
-modelo_texto = "gemini-2.0-flash-lite"
-modelo_imagen = "gemini-2.0-flash-preview-image-generation"
+modelo_texto = settings.gemini_text_model
+modelo_imagen = settings.gemini_image_model
 
 async def generar_receta_gemini(prompt):
     try:
@@ -51,6 +56,60 @@ async def validar_y_adaptar_receta_con_gemini(prompt):
         return f"Error al validar y adaptar receta: {str(e)}"
 
 async def generar_imagen_receta(prompt):
+    proveedor_imagen = settings.image_generation_provider.lower().strip()
+
+    if proveedor_imagen == "cloudflare":
+        return _generar_imagen_cloudflare(prompt)
+
+    if proveedor_imagen == "gemini":
+        return _generar_imagen_gemini(prompt)
+
+    print(f"Proveedor de imagen no soportado: {settings.image_generation_provider}")
+    return None
+
+
+def _generar_imagen_cloudflare(prompt):
+    if not settings.cloudflare_account_id or not settings.cloudflare_api_token:
+        print("Cloudflare image generation is not configured; skipping image generation.")
+        return None
+
+    try:
+        url = (
+            "https://api.cloudflare.com/client/v4/accounts/"
+            f"{settings.cloudflare_account_id}/ai/run/{settings.cloudflare_image_model}"
+        )
+        request = urllib.request.Request(
+            url,
+            data=json.dumps({"prompt": prompt, "steps": 4}).encode("utf-8"),
+            headers={
+                "Authorization": f"Bearer {settings.cloudflare_api_token}",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+
+        with urllib.request.urlopen(request, timeout=60) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+
+        image_base64 = payload.get("result", {}).get("image")
+        if not image_base64:
+            print("Cloudflare image response did not include result.image.")
+            return None
+
+        if image_base64.startswith("data:"):
+            image_base64 = image_base64.split(",", 1)[-1]
+
+        return base64.b64decode(image_base64)
+
+    except urllib.error.HTTPError as e:
+        print(f"Error al generar imagen con Cloudflare: HTTP {e.code}")
+        return None
+    except Exception as e:
+        print(f"Error al generar imagen con Cloudflare: {str(e)}")
+        return None
+
+
+def _generar_imagen_gemini(prompt):
     try:        
         # Usar el cliente para generar imagen
         response = client.models.generate_content(

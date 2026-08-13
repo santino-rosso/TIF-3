@@ -1,18 +1,40 @@
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorGridFSBucket
 from app.config import settings
 
-# Configuración de la conexión a MongoDB
-client = AsyncIOMotorClient(settings.mongo_uri)
-db = client["receya_db"]
+client = None
+db = None
+
+def init_mongo_connection():
+    global client, db
+    if client is None:
+        client = AsyncIOMotorClient(settings.mongo_uri)
+        db = client["receya_db"]
+
+def get_db():
+    if db is None:
+        init_mongo_connection()
+    return db
+
+class MongoCollectionProxy:
+    def __init__(self, collection_name):
+        self.collection_name = collection_name
+
+    def __getattr__(self, attr):
+        return getattr(get_db()[self.collection_name], attr)
+
+class GridFSBucketProxy:
+    def __getattr__(self, attr):
+        return getattr(AsyncIOMotorGridFSBucket(get_db()), attr)
+
 # Colecciones
-recetas_collection = db["recetas"]
-usuarios_collection = db["usuarios"]
-tokens_collection = db["tokens"]
-planes_collection = db["planes"]
-generaciones_collection = db["generaciones"]
+recetas_collection = MongoCollectionProxy("recetas")
+usuarios_collection = MongoCollectionProxy("usuarios")
+tokens_collection = MongoCollectionProxy("tokens")
+planes_collection = MongoCollectionProxy("planes")
+generaciones_collection = MongoCollectionProxy("generaciones")
 
 # GridFS bucket para manejar archivos de imágenes
-gridfs_bucket = AsyncIOMotorGridFSBucket(db)
+gridfs_bucket = GridFSBucketProxy()
 
 async def create_index():
     # Crear un índice único en el campo "email" de la colección "usuarios"
@@ -24,4 +46,8 @@ async def crear_index_tokens():
 
 async def close_mongo_connection():
     # Cerrar la conexión a la base de datos
-    client.close()
+    global client, db
+    if client is not None:
+        client.close()
+        client = None
+        db = None

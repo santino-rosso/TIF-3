@@ -289,7 +289,7 @@ const RecetaCard = ({ receta, similares, tipo = "generada" }) => {
     }
   };
 
-  const startCookingMode = (recipe = null) => {
+  const startCookingMode = () => {
     // Solicitar permisos de notificación
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
@@ -308,7 +308,7 @@ const RecetaCard = ({ receta, similares, tipo = "generada" }) => {
     return (
       <CookingMode 
         recipe={showCookingMode} 
-        titleRecipe={showCookingMode.titulo}
+        titulo={showCookingMode.titulo}
         onExit={() => setShowCookingMode(false)} 
       />
     );

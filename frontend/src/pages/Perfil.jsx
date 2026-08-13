@@ -32,7 +32,7 @@ const Perfil = () => {
       });
       setMessage("✅ Contraseña actualizada con éxito.");
       setNewPassword("");
-    } catch (err) {
+    } catch {
       setMessage("❌ Error al cambiar la contraseña.");
     }
   };

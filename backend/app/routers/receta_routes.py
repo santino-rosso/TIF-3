@@ -1,23 +1,37 @@
-from fastapi import APIRouter, File, UploadFile
+import asyncio
+
+from fastapi import APIRouter, Depends, File, Form, UploadFile
 from fastapi.responses import JSONResponse
 from app.services.gemini_service import generar_receta_gemini, detectar_ingredientes_gemini, validar_y_adaptar_receta_con_gemini, generar_imagen_receta
 from app.services.embedding_service import generar_embedding
 from app.db.receta_repository import guardar_receta, buscar_recetas_similares
 from app.db.plan_repository import puede_generar_receta, registrar_generacion
-from app.db.user_repository import obtener_plan_usuario
+from app.db.user_repository import obtener_plan_usuario, reservar_generacion_plan, liberar_generacion_plan
 from app.utils.receta_serializer import serializar_receta
 from app.utils.prompt_builder import formato_prompt_generar_receta, formato_prompt_detectar_ingredientes, formato_prompt_validar_receta, formato_prompt_generar_imagen
 from app.models.receta_model import DatosReceta
-from fastapi import Depends
 from app.services.auth_service import get_current_user
 from app.kag.validador import validar_ingredientes_con_restricciones
-from fastapi import Form
 from app.services.recomendador_service import obtener_recomendaciones_por_favoritos
 from app.utils.extraer_nombre_receta import extraer_nombre
-from app.db.plan_repository import puede_generar_receta, registrar_generacion
-from app.db.user_repository import obtener_plan_usuario
 
 router = APIRouter()
+
+def respuesta_limite_alcanzado(verificacion: dict) -> JSONResponse:
+    return JSONResponse(content={
+        "error": "Límite de generaciones alcanzado",
+        "detalle": verificacion.get("razon", "Has alcanzado el límite de recetas en tu período actual"),
+        "generaciones_usadas": verificacion.get("generaciones_usadas", 0),
+        "limite": verificacion.get("limite", 0),
+        "restantes": verificacion.get("restantes", 0),
+        "tipo": "limite_alcanzado"
+    }, status_code=403)
+
+async def liberar_reserva_generacion(email: str, plan_usuario) -> None:
+    try:
+        await liberar_generacion_plan(email, plan_usuario)
+    except Exception as e:
+        print(f"Error al liberar reserva de generación: {str(e)}")
 
 @router.post("/validar-ingredientes")
 async def validar_ingredientes(restricciones: str = Form(""), ingredientes: str = Form(""), imagen: UploadFile = File(None)):
@@ -52,25 +66,6 @@ async def validar_ingredientes(restricciones: str = Form(""), ingredientes: str 
 
 @router.post("/generar-receta")
 async def generar_receta(ingredientes: str = Form(""), preferencias: str = Form(""), restricciones: str = Form(""), tiempo: str = Form(""), tipo_comida: str = Form(""), herramientas: str = Form(""), experiencia: str = Form(""), current_user: dict = Depends(get_current_user)):
-    
-    # Verificar límites del plan antes de generar
-    try:
-        plan_usuario = await obtener_plan_usuario(current_user["email"])
-        if not plan_usuario:
-            return JSONResponse(content={"error": "No se pudo obtener el plan del usuario."}, status_code=500)
-        
-        verificacion = await puede_generar_receta(current_user["email"], plan_usuario)
-        if not verificacion["puede_generar"]:
-            return JSONResponse(content={
-                "error": "Límite de generaciones alcanzado",
-                "detalle": verificacion["razon"],
-                "generaciones_usadas": verificacion.get("generaciones_usadas", 0),
-                "limite": verificacion.get("limite", 0),
-                "tipo": "limite_alcanzado"
-            }, status_code=403)
-    except Exception as e:
-        return JSONResponse(content={"error": f"Error al verificar límites: {str(e)}"}, status_code=500)
-   
     datos_receta = DatosReceta(
         preferencias=preferencias,
         restricciones=restricciones,
@@ -80,53 +75,108 @@ async def generar_receta(ingredientes: str = Form(""), preferencias: str = Form(
         experiencia=experiencia,
         ingredientes=ingredientes,  
     )
-    
-    if not datos_receta.ingredientes :
+
+    if not datos_receta.ingredientes:
         return JSONResponse(content={"error": "No se proporcionaron ingredientes para generar la receta."}, status_code=400)
 
-    # Generar el prompt y la receta
-    prompt = formato_prompt_generar_receta(datos_receta)
-    receta_generada = await generar_receta_gemini(prompt)
+    plan_usuario = None
+    reserva_realizada = False
 
-    if not receta_generada or not receta_generada.strip():
-        return JSONResponse(content={"error": "No se pudo generar la receta."}, status_code=500)
+    # Verificar límites del plan antes de generar
+    try:
+        plan_usuario = await obtener_plan_usuario(current_user["email"])
+        if not plan_usuario:
+            return JSONResponse(content={"error": "No se pudo obtener el plan del usuario."}, status_code=500)
+
+        verificacion = await puede_generar_receta(current_user["email"], plan_usuario)
+        if not verificacion["puede_generar"]:
+            return respuesta_limite_alcanzado(verificacion)
+
+        reserva_realizada = await reservar_generacion_plan(
+            current_user["email"],
+            plan_usuario,
+            verificacion["limite"]
+        )
+        if not reserva_realizada:
+            plan_usuario_actualizado = await obtener_plan_usuario(current_user["email"])
+            verificacion_actualizada = await puede_generar_receta(current_user["email"], plan_usuario_actualizado)
+            if verificacion_actualizada["puede_generar"]:
+                reserva_realizada = await reservar_generacion_plan(
+                    current_user["email"],
+                    plan_usuario_actualizado,
+                    verificacion_actualizada["limite"]
+                )
+                if reserva_realizada:
+                    plan_usuario = plan_usuario_actualizado
+                else:
+                    plan_usuario_actualizado = await obtener_plan_usuario(current_user["email"])
+                    verificacion_actualizada = await puede_generar_receta(current_user["email"], plan_usuario_actualizado)
+            if not reserva_realizada:
+                return respuesta_limite_alcanzado(verificacion_actualizada)
+    except asyncio.CancelledError:
+        if reserva_realizada and plan_usuario:
+            await liberar_reserva_generacion(current_user["email"], plan_usuario)
+        raise
+    except Exception as e:
+        return JSONResponse(content={"error": f"Error al verificar límites: {str(e)}"}, status_code=500)
+
+    try:
+        # Generar el prompt y la receta
+        prompt = formato_prompt_generar_receta(datos_receta)
+        receta_generada = await generar_receta_gemini(prompt)
+
+        if not receta_generada or not receta_generada.strip():
+            await liberar_reserva_generacion(current_user["email"], plan_usuario)
+            return JSONResponse(content={"error": "No se pudo generar la receta."}, status_code=500)
+
+        # Validar y adaptar la receta generada para asegurar que cumpla con todos los requisitos
+        prompt_validar = formato_prompt_validar_receta(receta_generada, datos_receta)
+        receta_final = await validar_y_adaptar_receta_con_gemini(prompt_validar)
         
-    # Validar y adaptar la receta generada para asegurar que cumpla con todos los requisitos
-    prompt_validar = formato_prompt_validar_receta(receta_generada, datos_receta)
-    receta_final = await validar_y_adaptar_receta_con_gemini(prompt_validar)
-    
-    # Generar imagen de la receta
-    nombre_receta = extraer_nombre(receta_final)
-    prompt_imagen = formato_prompt_generar_imagen(nombre_receta, datos_receta.ingredientes)
-    imagen_bytes = await generar_imagen_receta(prompt_imagen)
+        # Generar imagen de la receta
+        nombre_receta = extraer_nombre(receta_final)
+        prompt_imagen = formato_prompt_generar_imagen(nombre_receta, datos_receta.ingredientes)
+        imagen_bytes = await generar_imagen_receta(prompt_imagen)
 
-    # Generar embedding para la receta
-    embedding = generar_embedding(receta_final)
+        # Generar embedding para la receta
+        embedding = generar_embedding(receta_final)
 
-    if not embedding or not isinstance(embedding, list) or len(embedding) == 0:
-        return JSONResponse(content={"error": "Error al generar el embedding."}, status_code=500)
-    
-    # Buscar recetas similares en la base de datos
-    recetas_similares, receta_duplicada = await buscar_recetas_similares(embedding)
+        if not embedding or not isinstance(embedding, list) or len(embedding) == 0:
+            await liberar_reserva_generacion(current_user["email"], plan_usuario)
+            return JSONResponse(content={"error": "Error al generar el embedding."}, status_code=500)
 
-    if not receta_duplicada:
-        print("Receta no duplicada, guardando en la base de datos.")
-        receta_id, imagen_id = await guardar_receta(receta_final, embedding, imagen_bytes, nombre_receta)
-        receta_generada_obj = {
-            "_id": receta_id,
-            "texto_receta": receta_final,
-            "imagen_id": imagen_id  
-        } 
-    else:
-        print("Receta duplicada, se utilizara la receta existente.")
-        receta_generada_obj = receta_duplicada
+        # Buscar recetas similares en la base de datos
+        recetas_similares, receta_duplicada = await buscar_recetas_similares(embedding)
 
-    recetas_similares_serializadas = [serializar_receta(r) for r in recetas_similares]
+        if not receta_duplicada:
+            print("Receta no duplicada, guardando en la base de datos.")
+            receta_id, imagen_id = await guardar_receta(receta_final, embedding, imagen_bytes, nombre_receta)
+            receta_generada_obj = {
+                "_id": receta_id,
+                "texto_receta": receta_final,
+                "imagen_id": imagen_id
+            }
+        else:
+            print("Receta duplicada, se utilizara la receta existente.")
+            receta_generada_obj = receta_duplicada
 
-    # Registrar la generación para el conteo del plan
+        receta_generada_obj = serializar_receta(receta_generada_obj)
+
+        recetas_similares_serializadas = [serializar_receta(r) for r in recetas_similares]
+    except asyncio.CancelledError:
+        await liberar_reserva_generacion(current_user["email"], plan_usuario)
+        raise
+    except Exception as e:
+        await liberar_reserva_generacion(current_user["email"], plan_usuario)
+        return JSONResponse(content={"error": f"Error al generar receta: {str(e)}"}, status_code=500)
+
+    # Registrar la generación como auditoría/historial. El cupo ya fue consumido por la reserva.
     try:
         receta_id_para_registro = receta_generada_obj.get("_id")
-        await registrar_generacion(current_user["email"], receta_id_para_registro)
+        await registrar_generacion(current_user["email"], str(receta_id_para_registro) if receta_id_para_registro else None)
+    except asyncio.CancelledError:
+        await liberar_reserva_generacion(current_user["email"], plan_usuario)
+        raise
     except Exception as e:
         print(f"Error al registrar generación: {str(e)}")
 

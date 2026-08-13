@@ -4,10 +4,11 @@ from app.routers.receta_routes import router as receta_router
 from app.routers.user_routes import router as user_router
 from app.routers.imagenes_routes import router as imagenes_router
 from app.routers.plan_routes import router as plan_router
-from app.db.mongo_client import create_index, close_mongo_connection, crear_index_tokens
+from app.db.mongo_client import create_index, close_mongo_connection, crear_index_tokens, init_mongo_connection
 from app.routers.favoritos_routes import router as favoritos_router
 from app.db.plan_repository import inicializar_planes
 from fastapi.middleware.cors import CORSMiddleware
+from app.config import settings
 
 
 @asynccontextmanager
@@ -16,6 +17,7 @@ async def lifespan(app: FastAPI):
     print("Iniciando la aplicación...")
     try:
         # Crear índices en la base de datos al iniciar la aplicación
+        init_mongo_connection()
         await create_index()
         await crear_index_tokens()
         print("Índices creados en la base de datos.")
@@ -42,10 +44,10 @@ app.include_router(imagenes_router, prefix="/api", tags=["Imágenes"])
 app.include_router(plan_router, prefix="/api", tags=["Planes"])  
 
 # Configuración de CORS
-# Permitir solicitudes desde el frontend en localhost:4173 y localhost:5173
+# Permitir solicitudes desde los orígenes configurados en CORS_ORIGINS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:4173", "http://localhost:5173"],  
+    allow_origins=settings.cors_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

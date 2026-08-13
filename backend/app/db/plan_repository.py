@@ -1,4 +1,4 @@
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Any
 from datetime import datetime, timedelta, timezone
 from app.db.mongo_client import planes_collection, generaciones_collection
 from app.models.plan_model import Plan, TipoPlan, PlanUsuario, GeneracionReceta
@@ -10,14 +10,14 @@ PLANES_DISPONIBLES = {
         limite_generaciones_mensual=5,
         precio=0.0,
         nombre="Plan Gratuito",
-        descripcion="Hasta 5 recetas por mes, perfecto para empezar"
+        descripcion="Hasta 5 recetas cada 30 días, perfecto para empezar"
     ),
     TipoPlan.PREMIUM: Plan(
         tipo=TipoPlan.PREMIUM,
         limite_generaciones_mensual=100,
         precio=9.99,
         nombre="Plan Premium",
-        descripcion="Hasta 100 recetas por mes, ideal para apasionados de la cocina"
+        descripcion="Hasta 100 recetas cada 30 días, ideal para apasionados de la cocina"
     )
 }
 
@@ -55,18 +55,25 @@ async def registrar_generacion(email: str, receta_id: Optional[str] = None):
     )
     await generaciones_collection.insert_one(generacion.dict())
 
-async def obtener_generaciones_mes_actual(email: str) -> int:
-    ahora = datetime.now(timezone.utc)
-    inicio_mes = ahora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    
-    count = await generaciones_collection.count_documents({
-        "usuario_email": email,
-        "fecha_generacion": {"$gte": inicio_mes}
-    })
-    return count
+def normalizar_datetime_utc(fecha: datetime) -> datetime:
+    if fecha.tzinfo is None:
+        return fecha.replace(tzinfo=timezone.utc)
+    return fecha.astimezone(timezone.utc)
 
-async def puede_generar_receta(email: str, plan_usuario: PlanUsuario) -> Dict[str, any]:
-    generaciones_usadas = await obtener_generaciones_mes_actual(email)
+async def obtener_generaciones_periodo_actual(email: str, plan_usuario: PlanUsuario) -> int:
+    inicio_periodo = normalizar_datetime_utc(plan_usuario.fecha_inicio_periodo)
+    fin_periodo = normalizar_datetime_utc(plan_usuario.fecha_fin_periodo)
+    generaciones_historicas = await generaciones_collection.count_documents({
+        "usuario_email": email,
+        "fecha_generacion": {
+            "$gte": inicio_periodo,
+            "$lt": fin_periodo
+        }
+    })
+    return max(plan_usuario.generaciones_usadas, generaciones_historicas)
+
+async def puede_generar_receta(email: str, plan_usuario: PlanUsuario) -> Dict[str, Any]:
+    generaciones_usadas = await obtener_generaciones_periodo_actual(email, plan_usuario)
     plan = await obtener_plan_por_tipo(plan_usuario.tipo_plan)
     
     if not plan:
@@ -75,9 +82,10 @@ async def puede_generar_receta(email: str, plan_usuario: PlanUsuario) -> Dict[st
     if generaciones_usadas >= plan.limite_generaciones_mensual:
         return {
             "puede_generar": False,
-            "razon": f"Has alcanzado el límite de {plan.limite_generaciones_mensual} recetas por mes",
+            "razon": f"Has alcanzado el límite de {plan.limite_generaciones_mensual} recetas en tu período actual",
             "generaciones_usadas": generaciones_usadas,
-            "limite": plan.limite_generaciones_mensual
+            "limite": plan.limite_generaciones_mensual,
+            "restantes": 0
         }
     
     return {
@@ -87,8 +95,8 @@ async def puede_generar_receta(email: str, plan_usuario: PlanUsuario) -> Dict[st
         "restantes": plan.limite_generaciones_mensual - generaciones_usadas
     }
 
-async def obtener_estadisticas_usuario(email: str, plan_usuario: PlanUsuario) -> Dict[str, any]:
-    generaciones_usadas = await obtener_generaciones_mes_actual(email)
+async def obtener_estadisticas_usuario(email: str, plan_usuario: PlanUsuario) -> Dict[str, Any]:
+    generaciones_usadas = await obtener_generaciones_periodo_actual(email, plan_usuario)
     plan = await obtener_plan_por_tipo(plan_usuario.tipo_plan)
     
     if not plan:

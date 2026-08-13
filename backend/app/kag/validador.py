@@ -1,6 +1,27 @@
 from app.kag.conocimiento_grafico import construir_ontologia_ingredientes
 from app.kag.embedding_mapper import mapear_ingredientes_usuario
 import networkx as nx
+import re
+
+
+def parsear_lista_usuario(texto):
+    if not texto:
+        return []
+
+    partes = re.split(r"[,\n;]+", texto)
+    elementos = []
+
+    for parte in partes:
+        elemento = parte.strip()
+        elemento = re.sub(r"^\*\*(.+)\*\*$", r"\1", elemento).strip()
+        elemento = re.sub(r"^\s*(?:[-*•]+|\d+[.)])\s*", "", elemento).strip()
+        elemento = re.sub(r"^\*\*(.+)\*\*$", r"\1", elemento).strip()
+        if elemento.endswith(":"):
+            continue
+        if elemento:
+            elementos.append(elemento)
+
+    return elementos
 
 def validar_restricciones_ontologia(ingredientes, restricciones_usuario):
     G = construir_ontologia_ingredientes()
@@ -29,12 +50,8 @@ def validar_restricciones_ontologia(ingredientes, restricciones_usuario):
     return ingredientes_invalidos
 
 def validar_ingredientes_con_restricciones(ingredientes, restricciones):
-    if ingredientes:
-        parsed_ingredientes = [ing.strip() for ing in ingredientes.split(',') if ing.strip()]    
-    else:
-        parsed_ingredientes = []
-
-    parsed_restricciones = [res.strip() for res in restricciones.split(',') if res.strip()]    
+    parsed_ingredientes = parsear_lista_usuario(ingredientes)
+    parsed_restricciones = parsear_lista_usuario(restricciones)
     
     # Validar con la ontología
     errores= validar_restricciones_ontologia(parsed_ingredientes, parsed_restricciones)

@@ -1,5 +1,6 @@
 import { jwtDecode } from "jwt-decode";
-import axiosInstance from "../utils/axiosInstance";
+import axios from "axios";
+import { API_BASE_URL } from "./apiConfig";
 
 export const isTokenExpired = (token) => {
   if (!token) return true;
@@ -7,7 +8,7 @@ export const isTokenExpired = (token) => {
     const decoded = jwtDecode(token);
     const currentTime = Date.now() / 1000; 
     return decoded.exp && currentTime > decoded.exp;
-  } catch (error) {
+  } catch {
     return true;
   }
 };
@@ -17,7 +18,7 @@ export const refreshAccessToken = async () => {
   if (!refreshToken) return null;
 
   try {
-    const response = await axiosInstance.post("/refresh", {
+    const response = await axios.post(`${API_BASE_URL}/refresh`, {
       refresh_token: refreshToken
     });
 

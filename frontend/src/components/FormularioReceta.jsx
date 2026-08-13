@@ -27,17 +27,32 @@ const FormularioReceta = () => {
   const navigate = useNavigate();
   const { validarIngredientes: validarIngredientesHook } = useValidarIngredientes();
 
+  const cargarPlanInfo = async () => {
+    const res = await axiosInstance.get("/obtener-plan");
+    setPlanInfo(res.data.estadisticas);
+    return res.data.estadisticas;
+  };
+
+  const verificarLimiteGeneracion = async () => {
+    const res = await axiosInstance.get("/verificar-limite");
+    const limite = res.data;
+
+    setPlanInfo((prev) => prev ? {
+      ...prev,
+      generaciones_usadas: limite.generaciones_usadas,
+      generaciones_restantes: limite.restantes,
+      limite_generaciones: limite.limite,
+      porcentaje_uso: limite.limite > 0 ? Math.round((limite.generaciones_usadas / limite.limite) * 1000) / 10 : 0,
+    } : prev);
+
+    return limite;
+  };
+
   // Cargar información del plan
   useEffect(() => {
-    const cargarPlanInfo = async () => {
-      try {
-        const res = await axiosInstance.get("/obtener-plan");
-        setPlanInfo(res.data.estadisticas);
-      } catch (error) {
-        console.error("Error al cargar plan:", error);
-      }
-    };
-    cargarPlanInfo();
+    cargarPlanInfo().catch((error) => {
+      console.error("Error al cargar plan:", error);
+    });
   }, []);
 
   // Limpiar recursos de la cámara al desmontar el componente
@@ -160,6 +175,7 @@ const FormularioReceta = () => {
     const nuevosErrores = validarFormulario();
     if (nuevosErrores.length > 0) {
       setErrores(nuevosErrores);
+      setLoading(false);
       return;
     }
 
@@ -167,6 +183,16 @@ const FormularioReceta = () => {
     setErrores([]);
 
     try {
+      const limite = await verificarLimiteGeneracion();
+      if (!limite.puede_generar) {
+        setErrores([
+          limite.razon || "Has alcanzado el límite de recetas en tu período actual.",
+          `Has usado ${limite.generaciones_usadas} de ${limite.limite} recetas en tu período actual.`
+        ]);
+        await cargarPlanInfo();
+        return;
+      }
+
       const ingredientesRes = await validarIngredientesHook(datos, modoIngredientes, imagen);
       
       let ingredientesFinales = "";
@@ -223,7 +249,7 @@ const FormularioReceta = () => {
         const errorData = err.response.data;
         setErrores([
           `${errorData.error}: ${errorData.detalle}`,
-          `Has usado ${errorData.generaciones_usadas} de ${errorData.limite} recetas este mes.`
+          `Has usado ${errorData.generaciones_usadas} de ${errorData.limite} recetas en tu período actual.`
         ]);
       } else {
         const mensajeError = err.response?.data?.error || "Error al generar la receta. Por favor, intenta nuevamente.";
@@ -272,7 +298,7 @@ const FormularioReceta = () => {
             {planInfo.generaciones_restantes === 0 && (
               <div className="mt-3 p-3 bg-red-100 rounded-lg">
                 <p className="text-red-800 text-sm font-medium">
-                  Has alcanzado el límite de recetas para este mes
+                  Has alcanzado el límite de recetas para tu período actual
                 </p>
                 <Link 
                   to="/planes" 
@@ -287,7 +313,7 @@ const FormularioReceta = () => {
             {planInfo.generaciones_restantes <= 2 && planInfo.generaciones_restantes > 0 && planInfo.tipo_plan === "gratuito" && (
               <div className="mt-3 p-3 bg-yellow-100 rounded-lg">
                 <p className="text-yellow-800 text-sm">
-                  Te quedan pocas recetas. Considerá actualizar a Premium para obtener hasta 100 recetas por mes.
+                  Te quedan pocas recetas. Considerá actualizar a Premium para obtener hasta 100 recetas cada 30 días.
                 </p>
                 <Link 
                   to="/planes" 

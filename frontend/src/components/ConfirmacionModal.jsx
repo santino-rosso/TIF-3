@@ -1,6 +1,6 @@
 import React from "react";
 
-const ConfirmacionModal = ({ isOpen, onClose, ingrediente, motivo, onConfirm, onCancel }) => {
+const ConfirmacionModal = ({ isOpen, ingrediente, motivo, onConfirm, onCancel }) => {
   if (!isOpen) return null;
 
   return (

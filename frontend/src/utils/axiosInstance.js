@@ -1,9 +1,7 @@
 import axios from "axios";
 import { refreshAccessToken } from "../utils/auth";
-import { Navigate } from "react-router-dom";
-
-// Exportar la base URL para reutilizar en otros componentes
-export const API_BASE_URL = "http://localhost:8000/api";
+export { API_BASE_URL } from "./apiConfig";
+import { API_BASE_URL } from "./apiConfig";
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -17,6 +15,13 @@ const processQueue = (error, token = null) => {
     error ? prom.reject(error) : prom.resolve(token);
   });
   failedQueue = [];
+};
+
+const clearAuthAndRedirect = () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("token_refresh");
+  localStorage.removeItem("recetaGenerada");
+  window.location.assign("/login");
 };
 
 // Agregar el token en cada request
@@ -49,22 +54,22 @@ axiosInstance.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
 
-      return new Promise(async (resolve, reject) => {
+      try {
         const newToken = await refreshAccessToken();
 
         if (newToken) {
           axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
           processQueue(null, newToken);
-          resolve(axiosInstance(originalRequest));
+          return axiosInstance(originalRequest);
         } else {
           processQueue(new Error("No se pudo refrescar el token"), null);
-          Navigate("/login");
-          reject(error);
+          clearAuthAndRedirect();
+          return Promise.reject(error);
         }
-
+      } finally {
         isRefreshing = false;
-      });
+      }
     }
 
     return Promise.reject(error);
@@ -72,5 +77,3 @@ axiosInstance.interceptors.response.use(
 );
 
 export default axiosInstance;
-
-

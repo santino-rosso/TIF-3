@@ -8,9 +8,10 @@ python-dotenv
 python-multipart
 pydantic-settings
 pydantic
-bcrypt
+bcrypt<5
 passlib[bcrypt]
 python-jose[cryptography]
 email-validator
 networkx
 Pillow
+scikit-learn

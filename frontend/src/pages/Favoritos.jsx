@@ -38,7 +38,7 @@ const Favoritos = () => {
         <div className="max-w-2xl mx-auto py-16 px-4 flex flex-col items-center justify-center">
           <h2 className="text-3xl font-bold text-green-700 mb-4 text-center">Tus Recetas Favoritas</h2>
           <p className="text-lg text-gray-600 mb-8 text-center">Aún no tenés recetas guardadas.</p>
-          <img src="/vite.svg" alt="Sin favoritos" className="w-32 opacity-60" />
+          <img src="/Reseya.png" alt="Sin favoritos" className="w-32 opacity-60" />
         </div>
       </div>
     );
