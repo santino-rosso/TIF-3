@@ -1,6 +1,5 @@
 from app.db.user_repository import obtener_favoritos
 from app.db.receta_repository import recetas_collection
-from app.services.embedding_service import modelo_embedding
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 

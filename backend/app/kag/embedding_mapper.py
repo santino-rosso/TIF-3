@@ -1,6 +1,5 @@
 from app.services.embedding_service import modelo_embedding
 from sentence_transformers import util
-import torch
 import re
 
 def obtener_nodos_ingredientes(grafo):

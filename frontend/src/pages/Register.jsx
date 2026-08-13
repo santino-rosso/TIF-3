@@ -19,7 +19,7 @@ const Register = () => {
               });
             navigate("/login"); 
         } catch (err) {
-            setError(err.response?.data?.detail || "Ocurrió un error al iniciar sesión.");
+            setError(err.response?.data?.detail || "Ocurrió un error al registrarse.");
         }
     };
 

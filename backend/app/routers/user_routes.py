@@ -21,21 +21,21 @@ async def register_user(usuario: UserCreate):
 # Login
 @router.post("/login", response_model=dict)
 async def login_user(usuario: OAuth2PasswordRequestForm = Depends()):
-    db_usario = await get_user_by_email(usuario.username)
+    db_usuario = await get_user_by_email(usuario.username)
     
-    if not db_usario: 
+    if not db_usuario:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     
-    db_usario = UserDB(**db_usario)
+    db_usuario = UserDB(**db_usuario)
 
-    if not verify_password(usuario.password, db_usario.hashed_password):
+    if not verify_password(usuario.password, db_usuario.hashed_password):
         raise HTTPException(status_code=401, detail="Contraseña incorrecta")
 
-    access_token = create_access_token(data={"sub": db_usario.email})
-    refresh_token, created_at = create_refresh_token(data={"sub": db_usario.email})
+    access_token = create_access_token(data={"sub": db_usuario.email})
+    refresh_token, created_at = create_refresh_token(data={"sub": db_usuario.email})
 
     # Guardar el refresh token en la base de datos
-    await guardar_refresh_token(email=db_usario.email, refresh_token=refresh_token, created_at=created_at)
+    await guardar_refresh_token(email=db_usuario.email, refresh_token=refresh_token, created_at=created_at)
 
     return {
         "access_token": access_token,

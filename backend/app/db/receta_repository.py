@@ -39,7 +39,7 @@ async def guardar_receta(receta_texto, embedding, imagen_bytes, nombre_receta):
 
 async def buscar_recetas_similares(embedding_actual, top_k=4):
 
-    simulitud_maxima = 0.98  # umbral para evitar recetas "casi iguales"
+    similitud_maxima = 0.98  # umbral para evitar recetas "casi iguales"
 
     # Obtener recetas con embeddings existentes
     recetas_cursor = recetas_collection.find({"embedding": {"$exists": True}})
@@ -53,9 +53,9 @@ async def buscar_recetas_similares(embedding_actual, top_k=4):
 
     # Verificar si hay recetas duplicadas
     # Si la similitud máxima es mayor que el umbral, se considera duplicada. Por lo tanto, no se guarda.
-    if (np.any(similitudes > simulitud_maxima)):
+    if (np.any(similitudes > similitud_maxima)):
         indice_mayor_similitud = np.argmax(similitudes)
-        if similitudes[indice_mayor_similitud] > simulitud_maxima:
+        if similitudes[indice_mayor_similitud] > similitud_maxima:
             receta_duplicada = recetas[indice_mayor_similitud]
     else:
         receta_duplicada = None

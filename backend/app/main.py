@@ -28,7 +28,7 @@ async def lifespan(app: FastAPI):
         print(f"Error al crear índices: {e}")
         raise
     
-    yield # Aca se ejecuta la aplicación
+    yield # Acá se ejecuta la aplicación
 
     # Código de cierre de la aplicación
     print("Cerrando la aplicación...")

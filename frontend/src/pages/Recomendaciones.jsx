@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axiosInstance from "../utils/axiosInstance";
 import RecetaCard from "../components/RecetaCard";
 import Navbar from "../components/Navbar";

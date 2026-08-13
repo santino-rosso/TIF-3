@@ -157,7 +157,7 @@ async def generar_receta(ingredientes: str = Form(""), preferencias: str = Form(
                 "imagen_id": imagen_id
             }
         else:
-            print("Receta duplicada, se utilizara la receta existente.")
+            print("Receta duplicada, se utilizará la receta existente.")
             receta_generada_obj = receta_duplicada
 
         receta_generada_obj = serializar_receta(receta_generada_obj)

@@ -15,7 +15,6 @@ def parsear_lista_usuario(texto):
         elemento = parte.strip()
         elemento = re.sub(r"^\*\*(.+)\*\*$", r"\1", elemento).strip()
         elemento = re.sub(r"^\s*(?:[-*•]+|\d+[.)])\s*", "", elemento).strip()
-        elemento = re.sub(r"^\*\*(.+)\*\*$", r"\1", elemento).strip()
         if elemento.endswith(":"):
             continue
         if elemento:

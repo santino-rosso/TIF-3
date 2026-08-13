@@ -51,7 +51,7 @@ def formato_prompt_generar_receta(datos: DatosReceta) -> str:
     - [adaptadas al usuario si corresponde]
 
     **Tiempo de cocina necesario:**
-    [duración en minutos respectando el tiempo disponible del usuario si corresponde]
+    [duración en minutos respetando el tiempo disponible del usuario si corresponde]
 
     **Tipo de comida:**
     [adaptada al usuario si corresponde]

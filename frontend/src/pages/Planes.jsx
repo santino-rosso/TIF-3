@@ -2,10 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
 import Navbar from "../components/Navbar";
-import { Crown, Zap, CheckCircle, XCircle } from "lucide-react";
+import { Crown, Zap, CheckCircle } from "lucide-react";
 
 const Planes = () => {
-  const [, setPlanActual] = useState(null);
   const [estadisticas, setEstadisticas] = useState(null);
   const [planesDisponibles, setPlanesDisponibles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,7 +24,6 @@ const Planes = () => {
         axiosInstance.get("/planes")
       ]);
 
-      setPlanActual(planRes.data.plan);
       setEstadisticas(planRes.data.estadisticas);
       setPlanesDisponibles(planesRes.data.planes);
     } catch (error) {

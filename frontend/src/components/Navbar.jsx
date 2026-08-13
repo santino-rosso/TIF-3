@@ -1,6 +1,6 @@
 import { useNavigate, Link } from "react-router-dom";
 import { logout } from "../utils/logout";
-import { HandPlatter, Star, User, Crown } from 'lucide-react';
+import { HandPlatter, Star, User } from 'lucide-react';
 import PlanStatus from "./PlanStatus";
 
 const Navbar = () => {
