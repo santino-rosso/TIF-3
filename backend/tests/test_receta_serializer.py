@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 
+import pytest
 from bson import ObjectId
 
 from app.utils.receta_serializer import serializar_receta
@@ -35,3 +36,16 @@ def test_serializar_receta_tolera_campos_opcionales_faltantes_o_nulos():
     result = serializar_receta(receta)
 
     assert result == {"_id": None, "texto_receta": "Sopa"}
+
+
+def test_serializar_receta_mantiene_imagen_id_string():
+    receta = {"_id": ObjectId(), "imagen_id": "existing-image-id"}
+
+    result = serializar_receta(receta)
+
+    assert result["imagen_id"] == "existing-image-id"
+
+
+def test_serializar_receta_rechaza_tipos_no_soportados():
+    with pytest.raises(TypeError, match="Tipo de receta no soportado"):
+        serializar_receta(ObjectId())

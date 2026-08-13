@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 from app.services.auth_service import get_current_user
-from app.db.plan_repository import obtener_todos_los_planes, obtener_estadisticas_usuario, puede_generar_receta
+from app.db.plan_repository import obtener_todos_los_planes, obtener_estadisticas_usuario, puede_generar_receta, crear_plan_usuario
 from app.db.user_repository import obtener_plan_usuario, actualizar_plan_usuario
-from app.models.plan_model import TipoPlan, PlanUsuario
-from datetime import datetime, timedelta, timezone
+from app.models.plan_model import TipoPlan
 
 router = APIRouter()
 
@@ -71,15 +70,7 @@ async def actualizar_plan(tipo_plan: str, current_user: dict = Depends(get_curre
         
         plan_tipo = TipoPlan(tipo_plan)
         
-        # Crear nuevo plan
-        ahora = datetime.now(timezone.utc)
-        nuevo_plan = PlanUsuario(
-            tipo_plan=plan_tipo,
-            generaciones_usadas=0,
-            fecha_inicio_periodo=ahora,
-            fecha_fin_periodo=ahora + timedelta(days=30),
-            activo=True
-        )
+        nuevo_plan = await crear_plan_usuario(plan_tipo)
         
         # Actualizar en la base de datos
         result = await actualizar_plan_usuario(current_user["email"], nuevo_plan)

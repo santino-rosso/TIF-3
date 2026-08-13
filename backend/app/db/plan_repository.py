@@ -3,7 +3,9 @@ from datetime import datetime, timedelta, timezone
 from app.db.mongo_client import planes_collection, generaciones_collection
 from app.models.plan_model import Plan, TipoPlan, PlanUsuario, GeneracionReceta
 
-# Planes predefinidos
+# Fuente única de verdad para los planes.
+# Mongo solo copia estos datos para consultas externas.
+# El sistema debe leer este archivo para evitar que datos viejos alteren los límites.
 PLANES_DISPONIBLES = {
     TipoPlan.GRATUITO: Plan(
         tipo=TipoPlan.GRATUITO,
@@ -23,14 +25,13 @@ PLANES_DISPONIBLES = {
 
 async def inicializar_planes():
     for plan in PLANES_DISPONIBLES.values():
-        existing = await planes_collection.find_one({"tipo": plan.tipo})
-        if not existing:
-            await planes_collection.insert_one(plan.dict())
+        await planes_collection.update_one(
+            {"tipo": plan.tipo},
+            {"$set": plan.dict()},
+            upsert=True
+        )
 
 async def obtener_plan_por_tipo(tipo: TipoPlan) -> Optional[Plan]:
-    plan_data = await planes_collection.find_one({"tipo": tipo})
-    if plan_data:
-        return Plan(**plan_data)
     return PLANES_DISPONIBLES.get(tipo)
 
 async def obtener_todos_los_planes() -> List[Plan]:

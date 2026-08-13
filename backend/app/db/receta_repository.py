@@ -1,7 +1,6 @@
 from app.db.mongo_client import recetas_collection, gridfs_bucket
+from app.utils.vector_similarity import find_duplicate_recipe, rank_recipes_by_cosine_similarity
 from datetime import datetime
-from sklearn.metrics.pairwise import cosine_similarity
-import numpy as np
 from io import BytesIO
 
 def obtener_metadata_imagen(imagen_bytes):
@@ -48,23 +47,15 @@ async def buscar_recetas_similares(embedding_actual, top_k=4):
     if not recetas:
         return [], None
 
-    embeddings_existentes = np.array([r["embedding"] for r in recetas])
-    similitudes = cosine_similarity([embedding_actual], embeddings_existentes)[0]
+    receta_duplicada = find_duplicate_recipe(
+        embedding_actual,
+        recetas,
+        threshold=similitud_maxima,
+    )
+    recetas_ordenadas = rank_recipes_by_cosine_similarity(
+        embedding_actual,
+        recetas,
+        top_k=top_k,
+    )
 
-    # Verificar si hay recetas duplicadas
-    # Si la similitud máxima es mayor que el umbral, se considera duplicada. Por lo tanto, no se guarda.
-    if (np.any(similitudes > similitud_maxima)):
-        indice_mayor_similitud = np.argmax(similitudes)
-        if similitudes[indice_mayor_similitud] > similitud_maxima:
-            receta_duplicada = recetas[indice_mayor_similitud]
-    else:
-        receta_duplicada = None
-
-    recetas_con_similitud = [
-        {"receta": receta, "similitud": sim}
-        for receta, sim in zip(recetas, similitudes)
-    ]
-
-    recetas_ordenadas = sorted(recetas_con_similitud, key=lambda x: x["similitud"], reverse=True)
-
-    return [r["receta"] for r in recetas_ordenadas[:top_k]], receta_duplicada
+    return recetas_ordenadas, receta_duplicada

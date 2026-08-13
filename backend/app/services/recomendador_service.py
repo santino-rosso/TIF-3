@@ -1,6 +1,6 @@
 from app.db.user_repository import obtener_favoritos
 from app.db.receta_repository import recetas_collection
-from sklearn.metrics.pairwise import cosine_similarity
+from app.utils.vector_similarity import rank_recipes_by_cosine_similarity
 import numpy as np
 
 async def obtener_recomendaciones_por_favoritos(email, top_k=10):
@@ -26,15 +26,11 @@ async def obtener_recomendaciones_por_favoritos(email, top_k=10):
     if not recetas:
         return []
 
-    embeddings_existentes = np.array([r["embedding"] for r in recetas])
-    similitudes = cosine_similarity([embedding_usuario], embeddings_existentes)[0]
-
     # Ordenar recetas por similitud (excluyendo las ya favoritas)
     ids_favoritos = set(str(r["_id"]) for r in favoritos)
-    recetas_con_similitud = [
-        {"receta": receta, "similitud": sim}
-        for receta, sim in zip(recetas, similitudes)
-        if str(receta["_id"]) not in ids_favoritos
-    ]
-    recetas_ordenadas = sorted(recetas_con_similitud, key=lambda x: x["similitud"], reverse=True)
-    return [r["receta"] for r in recetas_ordenadas[:top_k]]
+    return rank_recipes_by_cosine_similarity(
+        embedding_usuario,
+        recetas,
+        excluded_ids=ids_favoritos,
+        top_k=top_k,
+    )
