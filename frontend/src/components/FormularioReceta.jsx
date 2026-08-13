@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
 import { useValidarIngredientes } from "../utils/useValidarIngredientes";
 import { confirmarIngredientes } from "../utils/confirmarIngredientes.jsx";
 import { useIngredientImageInput } from "../hooks/useIngredientImageInput";
 import { usePlanInfo } from "../hooks/usePlanInfo";
-import { Crown, AlertTriangle } from "lucide-react";
+import RecipePlanNotice from "./RecipePlanNotice";
 
 const FormularioReceta = () => {
   const [modoIngredientes, setModoIngredientes] = useState("imagen"); 
@@ -192,68 +192,7 @@ const FormularioReceta = () => {
       <form onSubmit={handleSubmit} className="space-y-6">
         
         {/* Información del Plan */}
-        {planInfo && (
-          <div className={`p-4 rounded-lg border-2 ${
-            planInfo.generaciones_restantes === 0 
-              ? "bg-red-50 border-red-200" 
-              : planInfo.generaciones_restantes <= 2 && planInfo.tipo_plan === "gratuito"
-                ? "bg-yellow-50 border-yellow-200"
-                : "bg-blue-50 border-blue-200"
-          }`}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {planInfo.tipo_plan === "premium" ? (
-                  <Crown className="w-5 h-5 text-yellow-500" />
-                ) : (
-                  <AlertTriangle className={`w-5 h-5 ${
-                    planInfo.generaciones_restantes <= 2 ? "text-yellow-500" : "text-blue-500"
-                  }`} />
-                )}
-                <span className="font-medium text-gray-800">
-                  {planInfo.nombre_plan}
-                </span>
-              </div>
-              <div className="text-right">
-                <span className={`text-sm font-semibold ${
-                  planInfo.generaciones_restantes === 0 ? "text-red-600" :
-                  planInfo.generaciones_restantes <= 2 ? "text-yellow-600" : "text-gray-600"
-                }`}>
-                  {planInfo.generaciones_restantes} recetas restantes
-                </span>
-              </div>
-            </div>
-            
-            {planInfo.generaciones_restantes === 0 && (
-              <div className="mt-3 p-3 bg-red-100 rounded-lg">
-                <p className="text-red-800 text-sm font-medium">
-                  Has alcanzado el límite de recetas para tu período actual
-                </p>
-                <Link 
-                  to="/planes" 
-                  className="w-full bg-yellow-500 text-white hover:text-white px-4 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition-colors shadow mt-2 flex items-center justify-center gap-2"
-                >
-                  <Crown className="w-5 h-5" />
-                  Actualizar a Premium
-                </Link>
-              </div>
-            )}
-            
-            {planInfo.generaciones_restantes <= 2 && planInfo.generaciones_restantes > 0 && planInfo.tipo_plan === "gratuito" && (
-              <div className="mt-3 p-3 bg-yellow-100 rounded-lg">
-                <p className="text-yellow-800 text-sm">
-                  Te quedan pocas recetas. Considerá actualizar a Premium para obtener hasta 100 recetas cada 30 días.
-                </p>
-                <Link 
-                  to="/planes" 
-                  className="w-full bg-yellow-500 text-white hover:text-white px-4 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition-colors shadow mt-2 flex items-center justify-center gap-2"
-                >
-                  <Crown className="w-5 h-5" />
-                  Ver Planes
-                </Link>
-              </div>
-            )}
-          </div>
-        )}
+        <RecipePlanNotice planInfo={planInfo} />
         
         {loading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
