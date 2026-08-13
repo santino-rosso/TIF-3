@@ -338,10 +338,11 @@ const FormularioReceta = () => {
 
         {/* Modo de ingredientes */}
         <div className="bg-gray-50 p-4 rounded-lg">
-          <label className="block text-lg font-semibold mb-3 text-gray-700">
+          <label htmlFor="modo-ingredientes" className="block text-lg font-semibold mb-3 text-gray-700">
             ¿Cómo querés ingresar los ingredientes?
           </label>
           <select 
+            id="modo-ingredientes"
             value={modoIngredientes} 
             onChange={handleModoChange} 
             className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base bg-white text-gray-700"
@@ -353,11 +354,12 @@ const FormularioReceta = () => {
 
         {/* Campo de ingredientes */}
         <div className="space-y-2">
-          <label className="block text-lg font-semibold text-gray-700">
+          <label htmlFor={modoIngredientes === "texto" ? "ingredientes" : undefined} className="block text-lg font-semibold text-gray-700">
             Ingredientes
           </label>
           {modoIngredientes === "texto" && (
             <textarea
+              id="ingredientes"
               name="ingredientes"
               placeholder="Ej: tomate, arroz, huevo, cebolla, ajo..."
               value={datos.ingredientes}
@@ -502,10 +504,11 @@ const FormularioReceta = () => {
         {/* Grid de campos adicionales */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="preferencias" className="block text-sm font-semibold text-gray-700 mb-2">
               Preferencias alimentarias
             </label>
             <input
+              id="preferencias"
               type="text"
               name="preferencias"
               placeholder="Ej: vegetariano, sin gluten..."
@@ -516,10 +519,11 @@ const FormularioReceta = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="restricciones" className="block text-sm font-semibold text-gray-700 mb-2">
               Restricciones alimentarias
             </label>
             <input
+              id="restricciones"
               type="text"
               name="restricciones"
               placeholder="Ej: alergias, intolerancias..."
@@ -530,10 +534,11 @@ const FormularioReceta = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="tiempo" className="block text-sm font-semibold text-gray-700 mb-2">
               Tiempo disponible
             </label>
             <input
+              id="tiempo"
               type="text"
               name="tiempo"
               placeholder="Ej: 30 minutos, 1 hora..."
@@ -544,10 +549,11 @@ const FormularioReceta = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="tipo_comida" className="block text-sm font-semibold text-gray-700 mb-2">
               Tipo de comida
             </label>
             <input
+              id="tipo_comida"
               type="text"
               name="tipo_comida"
               placeholder="Ej: desayuno, almuerzo, cena..."
@@ -558,10 +564,11 @@ const FormularioReceta = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="herramientas" className="block text-sm font-semibold text-gray-700 mb-2">
               Herramientas disponibles
             </label>
             <input
+              id="herramientas"
               type="text"
               name="herramientas"
               placeholder="Ej: horno, sartén, licuadora..."
@@ -572,10 +579,11 @@ const FormularioReceta = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="experiencia" className="block text-sm font-semibold text-gray-700 mb-2">
               Nivel de experiencia
             </label>
             <input
+              id="experiencia"
               type="text"
               name="experiencia"
               placeholder="Ej: principiante, intermedio, avanzado..."
