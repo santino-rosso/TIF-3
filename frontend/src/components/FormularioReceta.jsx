@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
 import { useValidarIngredientes } from "../utils/useValidarIngredientes";
 import { confirmarIngredientes } from "../utils/confirmarIngredientes.jsx";
+import { useIngredientImageInput } from "../hooks/useIngredientImageInput";
 import { usePlanInfo } from "../hooks/usePlanInfo";
 import { Crown, AlertTriangle } from "lucide-react";
 
@@ -17,16 +18,26 @@ const FormularioReceta = () => {
     experiencia: "",
     ingredientes: "",
   });
-  const [imagen, setImagen] = useState(null);
   const [errores, setErrores] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [mostrarCamara, setMostrarCamara] = useState(false);
-  const [stream, setStream] = useState(null);
-  const [imagenPreviewUrl, setImagenPreviewUrl] = useState(null);
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
   const navigate = useNavigate();
   const { validarIngredientes: validarIngredientesHook } = useValidarIngredientes();
+  const {
+    imagen,
+    setImagen,
+    mostrarCamara,
+    stream,
+    imagenPreviewUrl,
+    videoRef,
+    canvasRef,
+    handleImagen,
+    iniciarCamara,
+    capturarFoto,
+    cerrarCamara,
+  } = useIngredientImageInput({
+    onCameraReady: () => setErrores([]),
+    onCameraError: (message) => setErrores([message]),
+  });
   const {
     plan: planInfo,
     actualizarEstadisticas: actualizarPlanInfo,
@@ -55,44 +66,8 @@ const FormularioReceta = () => {
     return limite;
   };
 
-  // Limpiar recursos de la cámara al desmontar el componente
-  useEffect(() => {
-    return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, [stream]);
-
-  // Asignar el stream al video cuando se abra la cámara
-  useEffect(() => {
-    if (mostrarCamara && stream && videoRef.current) {
-      videoRef.current.srcObject = stream;
-    }
-  }, [mostrarCamara, stream]);
-
-  // Crear y limpiar la URL exacta usada por la vista previa.
-  useEffect(() => {
-    if (!imagen || typeof imagen !== 'object' || !imagen.name) {
-      setImagenPreviewUrl(null);
-      return;
-    }
-
-    const url = URL.createObjectURL(imagen);
-    setImagenPreviewUrl(url);
-
-    return () => {
-      URL.revokeObjectURL(url);
-    };
-  }, [imagen]);
-
-
   const handleChange = (e) => {
     setDatos({ ...datos, [e.target.name]: e.target.value });
-  };
-
-  const handleImagen = (e) => {
-    setImagen(e.target.files[0]);
   };
 
   const handleModoChange = (e) => {
@@ -101,58 +76,7 @@ const FormularioReceta = () => {
     setDatos((prev) => ({ ...prev, ingredientes: "" }));
     setImagen(null);
     // Cerrar cámara si está abierta
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
-    }
-    setMostrarCamara(false);
-  };
-
-  const iniciarCamara = async () => {
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          facingMode: 'environment', // Usar cámara trasera por defecto
-          width: { ideal: 640 },
-          height: { ideal: 480 }
-        } 
-      });
-      setStream(mediaStream);
-      setMostrarCamara(true);
-      
-      // Limpiar errores previos
-      setErrores([]);
-    } catch (error) {
-      console.error('Error al acceder a la cámara:', error);
-      setErrores(['No se pudo acceder a la cámara. Verifica los permisos o prueba con otro navegador.']);
-    }
-  };
-
-  const capturarFoto = () => {
-    if (videoRef.current && canvasRef.current) {
-      const canvas = canvasRef.current;
-      const video = videoRef.current;
-      
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0);
-      
-      canvas.toBlob((blob) => {
-        const file = new File([blob], 'foto-ingredientes.jpg', { type: 'image/jpeg' });
-        setImagen(file);
-        cerrarCamara();
-      }, 'image/jpeg', 0.8);
-    }
-  };
-
-  const cerrarCamara = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
-    }
-    setMostrarCamara(false);
+    cerrarCamara();
   };
 
   const validarFormulario = () => {

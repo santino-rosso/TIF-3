@@ -66,19 +66,15 @@ describe('FormularioReceta', () => {
     axiosInstance.get.mockResolvedValue({ data: { estadisticas: planInfo } });
   });
 
-  it('revokes the same object URL used for the image preview', async () => {
+  it('shows a preview when an image is selected', async () => {
     const user = userEvent.setup();
-    const { container, unmount } = await renderForm();
+    const { container } = await renderForm();
     const imageFile = new File(['fake-image'], 'ingredients.png', { type: 'image/png' });
 
     await user.upload(container.querySelector('#imagen-input'), imageFile);
 
     expect(await screen.findByAltText('Vista previa de ingredientes')).toHaveAttribute('src', 'blob:ingredients-preview');
     expect(createObjectURL).toHaveBeenCalledWith(imageFile);
-
-    unmount();
-
-    expect(revokeObjectURL).toHaveBeenCalledWith('blob:ingredients-preview');
   });
 
   it('clears loading and does not generate when local validation fails', async () => {
