@@ -12,6 +12,7 @@ import {
   SkipForward,
   SkipBack
 } from 'lucide-react';
+import { API_BASE_URL } from '../utils/apiConfig';
 import './CookingMode.css';
 
 const CookingMode = ({ recipe, titulo, onExit }) => {
@@ -584,7 +585,7 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
             {recipe.imagen_id && (
               <div className="completion-image">
                 <img
-                  src={`http://localhost:8000/api/imagenes/${recipe.imagen_id}`}
+                  src={`${API_BASE_URL}/imagenes/${recipe.imagen_id}`}
                   alt={`Imagen de ${titulo}`}
                   className="recipe-completion-image"
                 />

@@ -22,6 +22,7 @@ const FormularioReceta = () => {
   const [mostrarCamara, setMostrarCamara] = useState(false);
   const [stream, setStream] = useState(null);
   const [planInfo, setPlanInfo] = useState(null);
+  const [imagenPreviewUrl, setImagenPreviewUrl] = useState(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const navigate = useNavigate();
@@ -71,14 +72,18 @@ const FormularioReceta = () => {
     }
   }, [mostrarCamara, stream]);
 
-  // Limpiar URL de objeto cuando cambie la imagen
+  // Crear y limpiar la URL exacta usada por la vista previa.
   useEffect(() => {
+    if (!imagen || typeof imagen !== 'object' || !imagen.name) {
+      setImagenPreviewUrl(null);
+      return;
+    }
+
+    const url = URL.createObjectURL(imagen);
+    setImagenPreviewUrl(url);
+
     return () => {
-      if (imagen && typeof imagen === 'object' && imagen.name) {
-        // Solo limpiar si es un File object con una URL creada
-        const url = URL.createObjectURL(imagen);
-        URL.revokeObjectURL(url);
-      }
+      URL.revokeObjectURL(url);
     };
   }, [imagen]);
 
@@ -405,7 +410,7 @@ const FormularioReceta = () => {
                   </div>
 
                   {/* Mostrar imagen seleccionada */}
-                  {imagen && (
+                  {imagen && imagenPreviewUrl && (
                     <div className="border-2 border-green-300 rounded-lg p-4 bg-green-50">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center">
@@ -427,7 +432,7 @@ const FormularioReceta = () => {
                       {/* Vista previa de la imagen */}
                       <div className="mt-3">
                         <img
-                          src={URL.createObjectURL(imagen)}
+                          src={imagenPreviewUrl}
                           alt="Vista previa de ingredientes"
                           className="w-full max-w-xs mx-auto rounded-lg shadow-md"
                           style={{ maxHeight: '200px', objectFit: 'cover' }}

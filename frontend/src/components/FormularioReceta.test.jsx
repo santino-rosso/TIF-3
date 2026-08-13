@@ -12,6 +12,9 @@ const { navigate, axiosInstance, validarIngredientes } = vi.hoisted(() => ({
   validarIngredientes: vi.fn(),
 }));
 
+const createObjectURL = vi.fn(() => 'blob:ingredients-preview');
+const revokeObjectURL = vi.fn();
+
 vi.mock('../utils/axiosInstance', () => ({
   default: axiosInstance,
 }));
@@ -52,7 +55,30 @@ describe('FormularioReceta', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    Object.defineProperty(URL, 'createObjectURL', {
+      value: createObjectURL,
+      configurable: true,
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      value: revokeObjectURL,
+      configurable: true,
+    });
     axiosInstance.get.mockResolvedValue({ data: { estadisticas: planInfo } });
+  });
+
+  it('revokes the same object URL used for the image preview', async () => {
+    const user = userEvent.setup();
+    const { container, unmount } = await renderForm();
+    const imageFile = new File(['fake-image'], 'ingredients.png', { type: 'image/png' });
+
+    await user.upload(container.querySelector('#imagen-input'), imageFile);
+
+    expect(await screen.findByAltText('Vista previa de ingredientes')).toHaveAttribute('src', 'blob:ingredients-preview');
+    expect(createObjectURL).toHaveBeenCalledWith(imageFile);
+
+    unmount();
+
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:ingredients-preview');
   });
 
   it('clears loading and does not generate when local validation fails', async () => {
