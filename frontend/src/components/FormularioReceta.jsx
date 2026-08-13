@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
 import { useValidarIngredientes } from "../utils/useValidarIngredientes";
 import { confirmarIngredientes } from "../utils/confirmarIngredientes.jsx";
+import { esFormularioRecetaValido, validarFormularioReceta } from "../utils/recipeFormValidation";
 import { useIngredientImageInput } from "../hooks/useIngredientImageInput";
 import { usePlanInfo } from "../hooks/usePlanInfo";
 import RecipePlanNotice from "./RecipePlanNotice";
@@ -79,28 +80,12 @@ const FormularioReceta = () => {
     cerrarCamara();
   };
 
-  const validarFormulario = () => {
-    const nuevosErrores = [];
-    if (!datos.ingredientes && modoIngredientes === "texto") nuevosErrores.push("El campo 'ingredientes' es obligatorio.");
-    if (!imagen && modoIngredientes === "imagen") nuevosErrores.push("Debes subir una imagen de los ingredientes.");
-    return nuevosErrores;
-  };
-
-  // Función para verificar si el formulario es válido para habilitar/deshabilitar el botón
-  const esFormularioValido = () => {
-    if (modoIngredientes === "texto") {
-      return datos.ingredientes && datos.ingredientes.trim() !== "";
-    } else {
-      return imagen !== null;
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     // Validar el formulario
-    const nuevosErrores = validarFormulario();
+    const nuevosErrores = validarFormularioReceta({ datos, modoIngredientes, imagen });
     if (nuevosErrores.length > 0) {
       setErrores(nuevosErrores);
       setLoading(false);
@@ -187,6 +172,8 @@ const FormularioReceta = () => {
       setLoading(false);
     }
   };
+
+  const formularioValido = esFormularioRecetaValido({ datos, modoIngredientes, imagen });
 
   return (
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -480,9 +467,9 @@ const FormularioReceta = () => {
         <div className="pt-4">
           <button 
             type="submit" 
-            disabled={loading || !esFormularioValido()}
+            disabled={loading || !formularioValido}
             className={`w-full font-bold py-4 px-6 rounded-lg text-lg transition-colors transform focus:outline-none focus:ring-4 shadow-lg ${
-              !esFormularioValido() 
+              !formularioValido
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                 : loading 
                   ? 'bg-gray-400 text-white cursor-not-allowed'
