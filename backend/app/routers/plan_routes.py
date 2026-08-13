@@ -62,6 +62,12 @@ async def actualizar_plan(tipo_plan: str, current_user: dict = Depends(get_curre
                 content={"error": "Tipo de plan inválido"}, 
                 status_code=400
             )
+
+        if tipo_plan == TipoPlan.PREMIUM.value:
+            return JSONResponse(
+                content={"error": "No se permite actualizar a premium desde este endpoint"},
+                status_code=403
+            )
         
         plan_tipo = TipoPlan(tipo_plan)
         

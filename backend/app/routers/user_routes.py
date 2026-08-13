@@ -3,7 +3,7 @@ from app.services.auth_service import hash_password, verify_password, create_acc
 from app.db.user_repository import get_user_by_email, create_user, update_user_password, delete_user_by_email
 from app.models.usuario_model import UserCreate, UserUpdatePassword, UserPublic, UserDB, UserLogout
 from fastapi.security import OAuth2PasswordRequestForm
-from app.db.token_repository import eliminar_refresh_token_de_usuario, guardar_refresh_token
+from app.db.token_repository import eliminar_refresh_token_de_usuario, eliminar_refresh_tokens_por_email, guardar_refresh_token
 
 router = APIRouter()
 
@@ -66,6 +66,7 @@ async def update_user_password_route(
 # Eliminar usuario
 @router.delete("/delete", response_model=dict)
 async def delete_user(current_user: dict = Depends(get_current_user)):
+    await eliminar_refresh_tokens_por_email(current_user["email"])
     result = await delete_user_by_email(current_user["email"])
     if result.deleted_count == 1:
         return {"msg": "Usuario eliminado correctamente."}

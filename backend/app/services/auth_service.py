@@ -57,7 +57,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
     return user
-    
+
 async def refresh_access_token(refresh_token: str) -> str:
     try:
         # Verificar si el refresh token existe en la base de datos
@@ -69,12 +69,17 @@ async def refresh_access_token(refresh_token: str) -> str:
         payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get("sub")
         if not email:
-            raise ValueError("Email no encontrado en el token")
-        
+            raise HTTPException(status_code=401, detail="Refresh token inválido.")
+        if token_db.get("email") != email:
+            raise HTTPException(status_code=401, detail="Refresh token inválido.")
+
+        user = await get_user_by_email(email)
+        if user is None:
+            raise HTTPException(status_code=401, detail="Refresh token inválido.")
+
         # Crear un nuevo access token
         new_access_token = create_access_token(data={"sub": email})
         return new_access_token
 
     except JWTError:
         raise HTTPException(status_code=401, detail="Refresh token inválido.")
-    

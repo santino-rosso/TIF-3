@@ -1,3 +1,6 @@
+import re
+
+
 def extraer_nombre(texto_receta: str) -> str:
     try:
         lineas = texto_receta.split('\n')
@@ -11,7 +14,7 @@ def extraer_nombre(texto_receta: str) -> str:
             if 'nombre de la receta' in linea.lower():
                 # Extraer el título removiendo asteriscos, dos puntos y la etiqueta
                 titulo = linea.replace('**', '').replace(':', '').strip()
-                nombre = titulo.replace('nombre de la receta', '', 1).strip()
+                nombre = re.sub(r'^nombre\s+de\s+la\s+receta\b', '', titulo, count=1, flags=re.IGNORECASE).strip()
                 if nombre:  # Verificar que no esté vacío
                     return nombre
         
@@ -25,5 +28,5 @@ def extraer_nombre(texto_receta: str) -> str:
         # Como último recurso, usar un nombre genérico
         return "Delicious homemade dish"
         
-    except Exception as e:
+    except Exception:
         return "Delicious homemade dish"
