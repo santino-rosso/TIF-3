@@ -2,7 +2,7 @@ import asyncio
 
 from fastapi import APIRouter, Depends, File, Form, UploadFile
 from fastapi.responses import JSONResponse
-from app.services.gemini_service import generar_receta_gemini, detectar_ingredientes_gemini, validar_y_adaptar_receta_con_gemini, generar_imagen_receta
+from app.services.gemini_service import GeminiGenerationError, generar_receta_gemini, detectar_ingredientes_gemini, validar_y_adaptar_receta_con_gemini, generar_imagen_receta
 from app.services.embedding_service import generar_embedding
 from app.db.receta_repository import guardar_receta, buscar_recetas_similares
 from app.db.plan_repository import puede_generar_receta, registrar_generacion
@@ -166,6 +166,9 @@ async def generar_receta(ingredientes: str = Form(""), preferencias: str = Form(
     except asyncio.CancelledError:
         await liberar_reserva_generacion(current_user["email"], plan_usuario)
         raise
+    except GeminiGenerationError as e:
+        await liberar_reserva_generacion(current_user["email"], plan_usuario)
+        return JSONResponse(content={"error": str(e)}, status_code=500)
     except Exception as e:
         await liberar_reserva_generacion(current_user["email"], plan_usuario)
         return JSONResponse(content={"error": f"Error al generar receta: {str(e)}"}, status_code=500)

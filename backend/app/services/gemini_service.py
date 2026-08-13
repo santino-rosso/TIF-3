@@ -19,6 +19,11 @@ client = genai.Client(api_key=api_key)
 modelo_texto = settings.gemini_text_model
 modelo_imagen = settings.gemini_image_model
 
+
+class GeminiGenerationError(Exception):
+    pass
+
+
 async def generar_receta_gemini(prompt):
     try:
         # Usar el cliente para generar la receta
@@ -28,7 +33,7 @@ async def generar_receta_gemini(prompt):
         )
         return response.text
     except Exception as e:
-        return f"Error al generar receta: {str(e)}"
+        raise GeminiGenerationError("Error al generar receta.") from e
 
 async def detectar_ingredientes_gemini(prompt=None, imagen_file=None):
     try:
@@ -53,7 +58,7 @@ async def validar_y_adaptar_receta_con_gemini(prompt):
         )
         return response.text
     except Exception as e:
-        return f"Error al validar y adaptar receta: {str(e)}"
+        raise GeminiGenerationError("Error al validar y adaptar receta.") from e
 
 async def generar_imagen_receta(prompt):
     proveedor_imagen = settings.image_generation_provider.lower().strip()
