@@ -2,15 +2,16 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
 import Navbar from "../components/Navbar";
+import { usePlanInfo } from "../hooks/usePlanInfo";
 import { Crown, Zap, CheckCircle } from "lucide-react";
 
 const Planes = () => {
-  const [estadisticas, setEstadisticas] = useState(null);
   const [planesDisponibles, setPlanesDisponibles] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingPlanes, setLoadingPlanes] = useState(true);
   const [actualizando, setActualizando] = useState(false);
   const [mensaje, setMensaje] = useState("");
   const navigate = useNavigate();
+  const { estadisticas, cargarPlanInfo } = usePlanInfo({ autoLoad: false });
 
   useEffect(() => {
     cargarDatos();
@@ -19,18 +20,17 @@ const Planes = () => {
   const cargarDatos = async () => {
     try {
       // Cargar plan actual y estadísticas
-      const [planRes, planesRes] = await Promise.all([
-        axiosInstance.get("/obtener-plan"),
+      const [, planesRes] = await Promise.all([
+        cargarPlanInfo(),
         axiosInstance.get("/planes")
       ]);
 
-      setEstadisticas(planRes.data.estadisticas);
       setPlanesDisponibles(planesRes.data.planes);
     } catch (error) {
       console.error("Error al cargar datos:", error);
       setMensaje("❌ Error al cargar la información del plan");
     } finally {
-      setLoading(false);
+      setLoadingPlanes(false);
     }
   };
 
@@ -66,7 +66,7 @@ const Planes = () => {
     return "bg-green-500";
   };
 
-  if (loading) {
+  if (loadingPlanes) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100">
         <Navbar />

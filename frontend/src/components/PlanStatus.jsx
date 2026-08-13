@@ -1,17 +1,22 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Crown, Zap } from "lucide-react";
-import axiosInstance from "../utils/axiosInstance";
+import { usePlanInfo } from "../hooks/usePlanInfo";
 
 const PlanStatus = () => {
-  const [estadisticas, setEstadisticas] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { estadisticas, loading, cargarPlanInfo, error: planError } = usePlanInfo();
 
   useEffect(() => {
-    cargarEstadisticas();
-    
+    if (planError) {
+      console.error("Error al cargar estadísticas del plan:", planError);
+    }
+  }, [planError]);
+
+  useEffect(() => {
     // Escuchar eventos de actualización de plan
     const handlePlanUpdate = () => {
-      cargarEstadisticas();
+      cargarPlanInfo().catch((error) => {
+        console.error("Error al cargar estadísticas del plan:", error);
+      });
     };
     
     window.addEventListener('planUpdated', handlePlanUpdate);
@@ -20,18 +25,7 @@ const PlanStatus = () => {
     return () => {
       window.removeEventListener('planUpdated', handlePlanUpdate);
     };
-  }, []);
-
-  const cargarEstadisticas = async () => {
-    try {
-      const res = await axiosInstance.get("/obtener-plan");
-      setEstadisticas(res.data.estadisticas);
-    } catch (error) {
-      console.error("Error al cargar estadísticas del plan:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [cargarPlanInfo]);
 
   if (loading || !estadisticas) {
     return null;

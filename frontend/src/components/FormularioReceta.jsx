@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
 import { useValidarIngredientes } from "../utils/useValidarIngredientes";
 import { confirmarIngredientes } from "../utils/confirmarIngredientes.jsx";
+import { usePlanInfo } from "../hooks/usePlanInfo";
 import { Crown, AlertTriangle } from "lucide-react";
 
 const FormularioReceta = () => {
@@ -21,40 +22,38 @@ const FormularioReceta = () => {
   const [loading, setLoading] = useState(false);
   const [mostrarCamara, setMostrarCamara] = useState(false);
   const [stream, setStream] = useState(null);
-  const [planInfo, setPlanInfo] = useState(null);
   const [imagenPreviewUrl, setImagenPreviewUrl] = useState(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const navigate = useNavigate();
   const { validarIngredientes: validarIngredientesHook } = useValidarIngredientes();
+  const {
+    plan: planInfo,
+    actualizarEstadisticas: actualizarPlanInfo,
+    cargarPlanInfo,
+    error: planError,
+  } = usePlanInfo();
 
-  const cargarPlanInfo = async () => {
-    const res = await axiosInstance.get("/obtener-plan");
-    setPlanInfo(res.data.estadisticas);
-    return res.data.estadisticas;
-  };
+  useEffect(() => {
+    if (planError) {
+      console.error("Error al cargar plan:", planError);
+    }
+  }, [planError]);
 
   const verificarLimiteGeneracion = async () => {
     const res = await axiosInstance.get("/verificar-limite");
     const limite = res.data;
 
-    setPlanInfo((prev) => prev ? {
+    actualizarPlanInfo((prev) => ({
       ...prev,
       generaciones_usadas: limite.generaciones_usadas,
       generaciones_restantes: limite.restantes,
       limite_generaciones: limite.limite,
       porcentaje_uso: limite.limite > 0 ? Math.round((limite.generaciones_usadas / limite.limite) * 1000) / 10 : 0,
-    } : prev);
+    }));
 
     return limite;
   };
-
-  // Cargar información del plan
-  useEffect(() => {
-    cargarPlanInfo().catch((error) => {
-      console.error("Error al cargar plan:", error);
-    });
-  }, []);
 
   // Limpiar recursos de la cámara al desmontar el componente
   useEffect(() => {

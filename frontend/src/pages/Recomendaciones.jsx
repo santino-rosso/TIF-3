@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axiosInstance from "../utils/axiosInstance";
 import RecetaCard from "../components/RecetaCard";
 import Navbar from "../components/Navbar";
+import EmptyState from "../components/EmptyState";
 
 const Recomendaciones = () => {
   const [recetas, setRecetas] = useState([]);
@@ -18,10 +19,10 @@ const Recomendaciones = () => {
       <div className="max-w-6xl mx-auto px-4 py-8">
         <h2 className="text-3xl font-bold text-green-700 mb-8 text-center">Recomendaciones</h2>
         {recetas.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16">
-            <p className="text-lg text-gray-600 mb-6">No hay recomendaciones disponibles en este momento.</p>
-            <img src="/Reseya.png" alt="Sin recomendaciones" className="w-32 opacity-60" />
-          </div>
+          <EmptyState
+            message="No hay recomendaciones disponibles en este momento."
+            imageAlt="Sin recomendaciones"
+          />
         ) : (
           <div className="flex flex-col gap-8">
             {recetas.map(receta => (
