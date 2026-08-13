@@ -4,6 +4,7 @@ import { useIngredientImageInput } from "../hooks/useIngredientImageInput";
 import { usePlanInfo } from "../hooks/usePlanInfo";
 import { useRecipeGenerationSubmit } from "../hooks/useRecipeGenerationSubmit";
 import IngredientInputSection from "./IngredientInputSection";
+import RecipeAdditionalFieldsGrid from "./RecipeAdditionalFieldsGrid";
 import RecipePlanNotice from "./RecipePlanNotice";
 
 const FormularioReceta = () => {
@@ -105,98 +106,7 @@ const FormularioReceta = () => {
           onCerrarCamara={cerrarCamara}
         />
 
-        {/* Grid de campos adicionales */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="preferencias" className="block text-sm font-semibold text-gray-700 mb-2">
-              Preferencias alimentarias
-            </label>
-            <input
-              id="preferencias"
-              type="text"
-              name="preferencias"
-              placeholder="Ej: vegetariano, sin gluten..."
-              value={datos.preferencias}
-              onChange={handleChange}
-              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base bg-white text-gray-700"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="restricciones" className="block text-sm font-semibold text-gray-700 mb-2">
-              Restricciones alimentarias
-            </label>
-            <input
-              id="restricciones"
-              type="text"
-              name="restricciones"
-              placeholder="Ej: alergias, intolerancias..."
-              value={datos.restricciones}
-              onChange={handleChange}
-              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base bg-white text-gray-700"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="tiempo" className="block text-sm font-semibold text-gray-700 mb-2">
-              Tiempo disponible
-            </label>
-            <input
-              id="tiempo"
-              type="text"
-              name="tiempo"
-              placeholder="Ej: 30 minutos, 1 hora..."
-              value={datos.tiempo}
-              onChange={handleChange}
-              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base bg-white text-gray-700"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="tipo_comida" className="block text-sm font-semibold text-gray-700 mb-2">
-              Tipo de comida
-            </label>
-            <input
-              id="tipo_comida"
-              type="text"
-              name="tipo_comida"
-              placeholder="Ej: desayuno, almuerzo, cena..."
-              value={datos.tipo_comida}
-              onChange={handleChange}
-              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base bg-white text-gray-700"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="herramientas" className="block text-sm font-semibold text-gray-700 mb-2">
-              Herramientas disponibles
-            </label>
-            <input
-              id="herramientas"
-              type="text"
-              name="herramientas"
-              placeholder="Ej: horno, sartén, licuadora..."
-              value={datos.herramientas}
-              onChange={handleChange}
-              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base bg-white text-gray-700"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="experiencia" className="block text-sm font-semibold text-gray-700 mb-2">
-              Nivel de experiencia
-            </label>
-            <input
-              id="experiencia"
-              type="text"
-              name="experiencia"
-              placeholder="Ej: principiante, intermedio, avanzado..."
-              value={datos.experiencia}
-              onChange={handleChange}
-              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base bg-white text-gray-700"
-            />
-          </div>
-        </div>
+        <RecipeAdditionalFieldsGrid datos={datos} onChange={handleChange} />
 
         {/* Errores */}
         {errores.length > 0 && (
