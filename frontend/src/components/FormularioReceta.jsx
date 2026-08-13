@@ -1,11 +1,8 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import axiosInstance from "../utils/axiosInstance";
-import { useValidarIngredientes } from "../utils/useValidarIngredientes";
-import { confirmarIngredientes } from "../utils/confirmarIngredientes.jsx";
-import { esFormularioRecetaValido, validarFormularioReceta } from "../utils/recipeFormValidation";
+import { esFormularioRecetaValido } from "../utils/recipeFormValidation";
 import { useIngredientImageInput } from "../hooks/useIngredientImageInput";
 import { usePlanInfo } from "../hooks/usePlanInfo";
+import { useRecipeGenerationSubmit } from "../hooks/useRecipeGenerationSubmit";
 import RecipePlanNotice from "./RecipePlanNotice";
 
 const FormularioReceta = () => {
@@ -20,9 +17,6 @@ const FormularioReceta = () => {
     ingredientes: "",
   });
   const [errores, setErrores] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const { validarIngredientes: validarIngredientesHook } = useValidarIngredientes();
   const {
     imagen,
     setImagen,
@@ -52,20 +46,15 @@ const FormularioReceta = () => {
     }
   }, [planError]);
 
-  const verificarLimiteGeneracion = async () => {
-    const res = await axiosInstance.get("/verificar-limite");
-    const limite = res.data;
-
-    actualizarPlanInfo((prev) => ({
-      ...prev,
-      generaciones_usadas: limite.generaciones_usadas,
-      generaciones_restantes: limite.restantes,
-      limite_generaciones: limite.limite,
-      porcentaje_uso: limite.limite > 0 ? Math.round((limite.generaciones_usadas / limite.limite) * 1000) / 10 : 0,
-    }));
-
-    return limite;
-  };
+  const { loading, handleSubmit } = useRecipeGenerationSubmit({
+    datos,
+    modoIngredientes,
+    imagen,
+    setDatos,
+    setErrores,
+    actualizarPlanInfo,
+    cargarPlanInfo,
+  });
 
   const handleChange = (e) => {
     setDatos({ ...datos, [e.target.name]: e.target.value });
@@ -78,99 +67,6 @@ const FormularioReceta = () => {
     setImagen(null);
     // Cerrar cámara si está abierta
     cerrarCamara();
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-
-    // Validar el formulario
-    const nuevosErrores = validarFormularioReceta({ datos, modoIngredientes, imagen });
-    if (nuevosErrores.length > 0) {
-      setErrores(nuevosErrores);
-      setLoading(false);
-      return;
-    }
-
-    // Limpiar errores anteriores
-    setErrores([]);
-
-    try {
-      const limite = await verificarLimiteGeneracion();
-      if (!limite.puede_generar) {
-        setErrores([
-          limite.razon || "Has alcanzado el límite de recetas en tu período actual.",
-          `Has usado ${limite.generaciones_usadas} de ${limite.limite} recetas en tu período actual.`
-        ]);
-        await cargarPlanInfo();
-        return;
-      }
-
-      const ingredientesRes = await validarIngredientesHook(datos, modoIngredientes, imagen);
-      
-      let ingredientesFinales = "";
-
-      if (ingredientesRes.ingredientes_no_aprobados) {
-        // Mostrar ingredientes no aptos al usuario
-        const confirmados = await confirmarIngredientes(ingredientesRes.ingredientes_no_aprobados);
-        
-        // Filtrar los ingredientes válidos
-        const ingredientesValidos = ingredientesRes.ingredientes.filter(ingrediente => {
-          // Verificar si el ingrediente está en la lista de no aprobados
-          const esNoAprobado = ingredientesRes.ingredientes_no_aprobados.some(
-            ([ingredienteNoAprobado]) => ingredienteNoAprobado === ingrediente
-          );
-          
-          // Si no está en la lista de no aprobados, lo mantenemos
-          if (!esNoAprobado) {
-            return true;
-          }
-          
-          // Si está en la lista de no aprobados, lo mantenemos solo si fue confirmado
-          return confirmados.includes(ingrediente);
-        });
-        
-        // Guardar los ingredientes válidos para usar inmediatamente
-        ingredientesFinales = ingredientesValidos.join(", ");
-      } else {
-        // Si no hay ingredientes no aprobados, guardar los ingredientes directamente
-        ingredientesFinales = ingredientesRes.ingredientes_validados.join(", ");
-      }
-
-      // Actualizar el estado (esto no se refleja inmediatamente)
-      setDatos((prev) => ({ ...prev, ingredientes: ingredientesFinales }));
-
-      // Crear FormData para generar la receta usando los ingredientes filtrados
-      const formDataGenerar = new FormData();
-      // Usar los datos actuales para todos los campos excepto ingredientes
-      Object.entries(datos).forEach(([key, value]) => {
-        if (key !== "ingredientes") {
-          formDataGenerar.append(key, value);
-        }
-      });
-
-      // Añadir los ingredientes filtrados correctamente
-      formDataGenerar.append("ingredientes", ingredientesFinales);
-
-      // Enviar la solicitud para generar la receta
-      const recetaRes = await axiosInstance.post("/generar-receta", formDataGenerar);
-      localStorage.setItem("recetaGenerada", JSON.stringify(recetaRes.data));
-      navigate("/resultados");
-    } catch (err) {
-      // Manejar error de límite específicamente
-      if (err.response?.data?.tipo === "limite_alcanzado") {
-        const errorData = err.response.data;
-        setErrores([
-          `${errorData.error}: ${errorData.detalle}`,
-          `Has usado ${errorData.generaciones_usadas} de ${errorData.limite} recetas en tu período actual.`
-        ]);
-      } else {
-        const mensajeError = err.response?.data?.error || "Error al generar la receta. Por favor, intenta nuevamente.";
-        setErrores([mensajeError]);
-      }
-    } finally {
-      setLoading(false);
-    }
   };
 
   const formularioValido = esFormularioRecetaValido({ datos, modoIngredientes, imagen });
