@@ -4,14 +4,9 @@ export const extraerTituloReceta = (textoReceta) => {
   const lineas = textoReceta.split('\n');
   for (const linea of lineas) {
     const lineaTrimmed = linea.trim();
-    if (/^(\*\*)?nombre de la receta(\*\*)?:/i.test(lineaTrimmed)) {
-      const titulo = lineaTrimmed
-        .replace(/^\*\*/, '')
-        .replace(/\*\*$/, '')
-        .replace(/^nombre de la receta\s*:\s*/i, '')
-        .replace(/^\*\*/, '')
-        .trim();
-
+    const match = lineaTrimmed.match(/^\**\s*nombre de la receta\s*\**\s*:\s*\**\s*(.+?)\s*\**$/i);
+    if (match) {
+      const titulo = match[1].replace(/^\**\s*/, '').replace(/\s*\**$/, '').trim();
       return titulo || 'la receta';
     }
   }

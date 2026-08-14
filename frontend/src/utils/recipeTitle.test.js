@@ -14,4 +14,12 @@ describe('recipeTitle', () => {
     expect(extraerTituloReceta('Ingredientes:\n- arroz')).toBe('la receta');
     expect(extraerTituloReceta('')).toBe('la receta');
   });
+
+  it('extracts the recipe name when only the label is bold', () => {
+    expect(extraerTituloReceta('**Nombre de la receta**: Tarta de manzana\n**Preparación:**')).toBe('Tarta de manzana');
+  });
+
+  it('extracts the recipe name with bold label and bold title', () => {
+    expect(extraerTituloReceta('**Nombre de la receta:** Guiso de lentejas**')).toBe('Guiso de lentejas');
+  });
 });
