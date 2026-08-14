@@ -44,7 +44,7 @@ async def validar_ingredientes(restricciones: str = Form(""), ingredientes: str 
         ingredientes_detectados = await detectar_ingredientes_gemini(prompt_img, imagen)
         
         # Verificar si se devolvió un mensaje de error
-        if isinstance(ingredientes_detectados, str) and ingredientes_detectados.startswith("Error al identificar ingredientes:"):
+        if isinstance(ingredientes_detectados, str) and ingredientes_detectados.startswith("Error al identificar ingredientes"):
             return JSONResponse(content={"error": ingredientes_detectados}, status_code=500)
 
         ingredientes = ingredientes_detectados
@@ -118,7 +118,8 @@ async def generar_receta(ingredientes: str = Form(""), preferencias: str = Form(
             await liberar_reserva_generacion(current_user["email"], plan_usuario)
         raise
     except Exception as e:
-        return JSONResponse(content={"error": f"Error al verificar límites: {str(e)}"}, status_code=500)
+        print(f"Error al verificar límites: {str(e)}")
+        return JSONResponse(content={"error": "Error al verificar límites."}, status_code=500)
 
     try:
         # Generar el prompt y la receta
@@ -171,7 +172,8 @@ async def generar_receta(ingredientes: str = Form(""), preferencias: str = Form(
         return JSONResponse(content={"error": str(e)}, status_code=500)
     except Exception as e:
         await liberar_reserva_generacion(current_user["email"], plan_usuario)
-        return JSONResponse(content={"error": f"Error al generar receta: {str(e)}"}, status_code=500)
+        print(f"Error al generar receta: {str(e)}")
+        return JSONResponse(content={"error": "Error al generar receta."}, status_code=500)
 
     # Registrar la generación como auditoría/historial. El cupo ya fue consumido por la reserva.
     try:

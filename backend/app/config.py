@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     cloudflare_account_id: str | None = None
     cloudflare_api_token: str | None = None
     cloudflare_image_model: str = "@cf/black-forest-labs/flux-1-schnell"
+    cloudflare_api_base_url: str = "https://api.cloudflare.com/client/v4/accounts/"
 
     @property
     def cors_origins_list(self) -> list[str]:

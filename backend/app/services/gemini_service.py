@@ -47,7 +47,8 @@ async def detectar_ingredientes_gemini(prompt=None, imagen_file=None):
         )
         return response.text
     except Exception as e:
-        return f"Error al identificar ingredientes: {str(e)}"
+        print(f"Error al identificar ingredientes: {str(e)}")
+        return "Error al identificar ingredientes."
         
 async def validar_y_adaptar_receta_con_gemini(prompt):
     try:
@@ -80,7 +81,7 @@ def _generar_imagen_cloudflare(prompt):
 
     try:
         url = (
-            "https://api.cloudflare.com/client/v4/accounts/"
+            f"{settings.cloudflare_api_base_url}"
             f"{settings.cloudflare_account_id}/ai/run/{settings.cloudflare_image_model}"
         )
         request = urllib.request.Request(
