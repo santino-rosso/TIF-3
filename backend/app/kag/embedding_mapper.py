@@ -2,6 +2,11 @@ from app.services.embedding_service import modelo_embedding
 from sentence_transformers import util
 import re
 
+def _mejor_coincidencia_coseno(emb_usuario, emb_candidatos, candidatos):
+    similitudes = util.cos_sim(emb_usuario, emb_candidatos)
+    idx_max = similitudes[0].argmax().item()
+    return candidatos[idx_max], similitudes[0][idx_max].item()
+
 def obtener_nodos_ingredientes(grafo):
     # Definir las categorías de ingredientes que no deben ser considerados
     categorias = ["celiaquía", "diabetes", "intolerancia a la lactosa"]
@@ -92,13 +97,7 @@ def mapear_ingredientes_usuario(ingredientes_usuario, grafo, umbral_exacto=0.50,
             textos_para_comparar = [ingrediente] + candidatos_variantes
             embeddings = modelo_embedding.encode(textos_para_comparar, convert_to_tensor=True)
 
-            # Comparamos el embedding del ingrediente usuario con cada coincidencia
-            similitudes = util.cos_sim(embeddings[0:1], embeddings[1:])
-
-            # Encontrar la mejor coincidencia
-            idx_max = similitudes[0].argmax().item()
-            mejor_match = candidatos_variantes[idx_max]
-            similitud = similitudes[0][idx_max].item()
+            mejor_match, similitud = _mejor_coincidencia_coseno(embeddings[0:1], embeddings[1:], candidatos_variantes)
 
             print(f"Ingrediente: '{ingrediente}' → Variante detectada: '{mejor_match}' (similitud: {similitud:.4f})")
             
@@ -111,15 +110,9 @@ def mapear_ingredientes_usuario(ingredientes_usuario, grafo, umbral_exacto=0.50,
         # Codificamos solo este ingrediente y todos los ingredientes base
         emb_usuario = modelo_embedding.encode([ingrediente], convert_to_tensor=True)
         emb_base = modelo_embedding.encode(ingredientes_base, convert_to_tensor=True)
-        
-        # Calculamos similitud
-        similitudes = util.cos_sim(emb_usuario, emb_base)
 
-        # Encontrar la mejor coincidencia
-        idx_max = similitudes[0].argmax().item()
-        mejor_match = ingredientes_base[idx_max]
-        similitud = similitudes[0][idx_max].item()
-        
+        mejor_match, similitud = _mejor_coincidencia_coseno(emb_usuario, emb_base, ingredientes_base)
+
         print(f"Ingrediente: '{ingrediente}' → Mejor match general: '{mejor_match}' (similitud: {similitud:.4f})")
         
         # Si supera el umbral, lo mapeamos
