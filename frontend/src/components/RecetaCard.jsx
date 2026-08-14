@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { extraerTituloReceta } from "../utils/recipeTitle";
 import "../styles/recetas.css";
 import CookingMode from './CookingMode';
+import { RecipeFavoriteButton } from './RecipeFavoriteButton';
 import { RecipeImageModal, RecipeImagePreview } from './RecipeImageDisplay';
 import {
   List,
@@ -338,24 +339,10 @@ const RecetaCard = ({ receta, similares, tipo = "generada" }) => {
                 <span className="hidden sm:inline">Modo Cocina</span>
                 <span className="sm:hidden">Cocinar</span>
               </button>
-              <button
+              <RecipeFavoriteButton
+                isSaved={guardadas.principal}
                 onClick={() => toggleFavorito(receta._id, true)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all transform hover:scale-105 ${
-                  guardadas.principal 
-                    ? 'bg-red-500 hover:bg-red-600 text-white' 
-                    : 'bg-white hover:bg-gray-50 text-green-600'
-                }`}
-              >
-              <svg className="w-5 h-5" fill={guardadas.principal ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-              <span className="hidden sm:inline">
-                {guardadas.principal ? 'Quitar de favoritos' : 'Guardar como favorita'}
-              </span>
-              <span className="sm:hidden">
-                {guardadas.principal ? 'Quitar' : 'Guardar'}
-              </span>
-            </button>
+              />
             </div>
           </div>
         </div>
@@ -418,21 +405,11 @@ const RecetaCard = ({ receta, similares, tipo = "generada" }) => {
                         <span className="hidden sm:inline">Modo Cocina</span>
                         <span className="sm:hidden">Cocinar</span>
                       </button>
-                      <button
+                      <RecipeFavoriteButton
+                        isSaved={guardadas.similares[idx]}
                         onClick={() => toggleFavorito(rec._id, false, idx)}
-                        className={`flex items-center gap-1 px-3 py-1 rounded-md text-sm font-medium transition-all ${
-                          guardadas.similares[idx] 
-                            ? 'bg-red-500 hover:bg-red-600 text-white' 
-                            : 'bg-white hover:bg-gray-50 text-green-600'
-                        }`}
-                      >
-                        <svg className="w-4 h-4" fill={guardadas.similares[idx] ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                        </svg>
-                        <span className="hidden sm:inline">
-                          {guardadas.similares[idx] ? 'Guardada' : 'Guardar'}
-                        </span>
-                      </button>
+                        variant="similar"
+                      />
                     </div>
                   </div>
                 </div>
