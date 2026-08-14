@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
 import Navbar from "../components/Navbar";
 import { usePlanInfo } from "../hooks/usePlanInfo";
+import { calcularPorcentajeUso, colorNivelUso } from "../utils/planStats";
 import { Crown, Zap, CheckCircle } from "lucide-react";
 
 const Planes = () => {
@@ -56,15 +57,10 @@ const Planes = () => {
 
   const getPorcentajeUso = () => {
     if (!estadisticas) return 0;
-    return Math.min((estadisticas.generaciones_usadas / estadisticas.limite_generaciones) * 100, 100);
+    return calcularPorcentajeUso(estadisticas);
   };
 
-  const getColorBarra = () => {
-    const porcentaje = getPorcentajeUso();
-    if (porcentaje >= 90) return "bg-red-500";
-    if (porcentaje >= 70) return "bg-yellow-500";
-    return "bg-green-500";
-  };
+  const getColorBarra = () => colorNivelUso(getPorcentajeUso());
 
   if (loadingPlanes) {
     return (

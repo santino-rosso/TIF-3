@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
 import { confirmarIngredientes } from "../utils/confirmarIngredientes.jsx";
+import { calcularPorcentajeUso } from "../utils/planStats";
 import { validarFormularioReceta } from "../utils/recipeFormValidation";
 import { useValidarIngredientes } from "../utils/useValidarIngredientes";
 
@@ -27,7 +28,10 @@ export const useRecipeGenerationSubmit = ({
       generaciones_usadas: limite.generaciones_usadas,
       generaciones_restantes: limite.restantes,
       limite_generaciones: limite.limite,
-      porcentaje_uso: limite.limite > 0 ? Math.round((limite.generaciones_usadas / limite.limite) * 1000) / 10 : 0,
+      porcentaje_uso: calcularPorcentajeUso({
+        generaciones_usadas: limite.generaciones_usadas,
+        limite_generaciones: limite.limite,
+      }),
     }));
 
     return limite;

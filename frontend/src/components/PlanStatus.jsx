@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Crown, Zap } from "lucide-react";
 import { usePlanInfo } from "../hooks/usePlanInfo";
+import { calcularPorcentajeUso, colorNivelUso } from "../utils/planStats";
 
 const PlanStatus = () => {
   const { estadisticas, loading, cargarPlanInfo, error: planError } = usePlanInfo();
@@ -31,7 +32,7 @@ const PlanStatus = () => {
     return null;
   }
 
-  const porcentajeUso = Math.min((estadisticas.generaciones_usadas / estadisticas.limite_generaciones) * 100, 100);
+  const porcentajeUso = calcularPorcentajeUso(estadisticas);
 
   return (
     <div className="flex items-center gap-2 text-sm">
@@ -51,8 +52,7 @@ const PlanStatus = () => {
       <div className="w-12 bg-gray-200 rounded-full h-1.5">
         <div 
           className={`h-1.5 rounded-full transition-all duration-300 ${
-            porcentajeUso >= 90 ? "bg-red-500" : 
-            porcentajeUso >= 70 ? "bg-yellow-500" : "bg-green-500"
+            colorNivelUso(porcentajeUso)
           }`}
           style={{ width: `${porcentajeUso}%` }}
         ></div>
