@@ -3,13 +3,10 @@ import { useEffect, useState } from "react";
 import { extraerTituloReceta } from "../utils/recipeTitle";
 import "../styles/recetas.css";
 import CookingMode from './CookingMode';
-import { RecipeFavoriteButton } from './RecipeFavoriteButton';
 import { RecipeImageModal, RecipeImagePreview } from './RecipeImageDisplay';
 import { formatearReceta } from '../utils/recipeFormatter';
 import SimilarRecipesSection from './SimilarRecipesSection';
-import {
-  ChefHat,
-} from 'lucide-react';
+import RecipeMainHeader from './RecipeMainHeader';
 
 const RecetaCard = ({ receta, similares, tipo = "generada" }) => {
   const [guardadas, setGuardadas] = useState({
@@ -100,51 +97,12 @@ const RecetaCard = ({ receta, similares, tipo = "generada" }) => {
       {/* Receta Principal */}
       <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
         {/* Header de la receta */}
-        <div className="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-            <div>
-              {tipo === "generada" ? (
-                <>
-                  <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                    <ChefHat className="w-8 h-8 text-white" />
-                    Tu Receta Personalizada
-                  </h2>
-                  <p className="text-green-100 text-sm">Creada especialmente para ti</p>
-                </>
-              ) : tipo === "favorita" ? (
-                <>
-                  <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                    <ChefHat className="w-8 h-8 text-white" />
-                    Receta guardada
-                  </h2>
-                  <p className="text-green-100 text-sm">Marcada como favorita por vos</p>
-                </>
-              ) : (
-                <>
-                  <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                    <ChefHat className="w-8 h-8 text-white" />
-                    Receta recomendada para vos
-                  </h2>
-                  <p className="text-green-100 text-sm">Sugerida según tus favoritas</p>
-                </>
-              )}
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <button
-                onClick={() => startCookingMode()}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all transform hover:scale-105 bg-blue-500 hover:bg-blue-600 text-white"
-              >
-                <ChefHat className="w-5 h-5" />
-                <span className="hidden sm:inline">Modo Cocina</span>
-                <span className="sm:hidden">Cocinar</span>
-              </button>
-              <RecipeFavoriteButton
-                isSaved={guardadas.principal}
-                onClick={() => toggleFavorito(receta._id, true)}
-              />
-            </div>
-          </div>
-        </div>
+        <RecipeMainHeader
+          tipo={tipo}
+          isSaved={guardadas.principal}
+          onCookingMode={startCookingMode}
+          onToggleFavorite={() => toggleFavorito(receta._id, true)}
+        />
 
         {/* Imagen SOLO para la receta generada */}
         {(tipo === "generada" || tipo === "favorita" || tipo === "recomendada") && receta.imagen_id && (
