@@ -1,5 +1,6 @@
 import axiosInstance, { API_BASE_URL } from "../utils/axiosInstance";
 import { useEffect, useState } from "react";
+import { extraerTituloReceta } from "../utils/recipeTitle";
 import "../styles/recetas.css";
 import CookingMode from './CookingMode';
 import {
@@ -17,26 +18,6 @@ import {
   Repeat,
   ImageIcon
 } from 'lucide-react';
-
-// Función para extraer el nombre de la receta del texto
-const extraerTituloReceta = (textoReceta) => {
-  if (!textoReceta) return 'la receta';
-  
-  const lineas = textoReceta.split('\n');
-  for (const linea of lineas) {
-    const lineaTrimmed = linea.trim();
-    if (/^(\*\*)?nombre de la receta(\*\*)?:/i.test(lineaTrimmed)) {
-      let titulo = lineaTrimmed
-        .replace(/^\*\*/, '')           
-        .replace(/\*\*$/, '')           
-        .replace(/^nombre de la receta\s*:\s*/i, '')  
-        .replace(/^\*\*/, '')        
-        .trim();
-      return titulo || 'la receta';
-    }
-  }
-  return 'la receta';
-};
 
 // Función para detectar si una línea es un título de receta
 const esTituloReceta = (linea) => {
