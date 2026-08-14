@@ -14,14 +14,12 @@ import {
 } from 'lucide-react';
 import { API_BASE_URL } from '../utils/apiConfig';
 import { NUMBERED_STEP_REGEX, NUMBERED_STEP_STRIP_REGEX } from '../utils/recipeFormatter';
+import { useCookingTimer } from '../hooks/useCookingTimer';
 import './CookingMode.css';
 
 const CookingMode = ({ recipe, titulo, onExit }) => {
   const [showCompletion, setShowCompletion] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [activeTimer, setActiveTimer] = useState(null);
-  const [timeLeft, setTimeLeft] = useState(0);
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [voiceSupported, setVoiceSupported] = useState(false);
   const [autoRead, setAutoRead] = useState(true);
@@ -33,7 +31,6 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
   const autoReadRef = useRef(true);
   const currentStepRef = useRef(0);
   const instructionsRef = useRef([]);
-  const isTimerRunningRef = useRef(false);
 
   // Extraer instrucciones de la receta
   const parseInstructions = useCallback((recipeText) => {
@@ -110,10 +107,6 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
   useEffect(() => {
     instructionsRef.current = instructions;
   }, [instructions]);
-
-  useEffect(() => {
-    isTimerRunningRef.current = isTimerRunning;
-  }, [isTimerRunning]);
 
   // Mantener pantalla encendida
   useEffect(() => {
@@ -201,31 +194,20 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
     }
   }, [startRecognition, stopRecognition]);
 
-  const pauseTimer = useCallback(() => {
-    setIsTimerRunning(prev => !prev);
-  }, []);
-
-  const resetTimer = useCallback(() => {
-    setIsTimerRunning(false);
-    setTimeLeft(0);
-    setActiveTimer(null);
-  }, []);
-
-  const extractTimeFromStep = useCallback((instruction) => {
-    const timeRegex = /(\d+)\s*(minutos?|min|horas?|h)/gi;
-    const matches = instruction.match(timeRegex);
-    if (matches) {
-      const timeStr = matches[0];
-      const number = parseInt(timeStr.match(/\d+/)[0]);
-      const unit = timeStr.toLowerCase();
-
-      if (unit.includes('hora') || unit.includes('h')) {
-        return number * 60;
-      }
-      return number;
-    }
-    return null;
-  }, []);
+  const {
+    activeTimer,
+    setActiveTimer,
+    timeLeft,
+    setTimeLeft,
+    isTimerRunning,
+    setIsTimerRunning,
+    isTimerRunningRef,
+    pauseTimer,
+    resetTimer,
+    startTimer,
+    extractTimeFromStep,
+    formatTime,
+  } = useCookingTimer({ speak, currentStep });
 
   const handleVoiceCommand = useCallback((command) => {
     console.log('Comando de voz:', command);
@@ -271,7 +253,7 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
         speak('Temporizador reanudado');
       }
     }
-  }, [extractTimeFromStep, pauseTimer, resetTimer, speak]);
+  }, [extractTimeFromStep, isTimerRunningRef, pauseTimer, resetTimer, setActiveTimer, setIsTimerRunning, setTimeLeft, speak]);
 
   const toggleVoiceRecognition = () => {
     if (!voiceSupported) {
@@ -288,33 +270,6 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
       setIsListening(true);
       startRecognition();
     }
-  };
-
-  const showTimerNotification = useCallback(() => {
-    // Vibración
-    if ('vibrate' in navigator) {
-      navigator.vibrate([200, 100, 200, 100, 200]);
-    }
-
-    // Notificación
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('⏰ ¡Tiempo terminado!', {
-        body: `Paso ${currentStep + 1} completado`,
-        icon: '/Reseya.png',
-        vibrate: [200, 100, 200]
-      });
-    }
-
-    // Síntesis de voz
-    speak('Tiempo terminado');
-  }, [currentStep, speak]);
-
-  const startTimer = (minutes) => {
-    const seconds = minutes * 60;
-    setTimeLeft(seconds);
-    setActiveTimer(currentStep);
-    setIsTimerRunning(true);
-    speak(`Temporizador iniciado por ${minutes} minutos`);
   };
 
   const nextStep = () => {
@@ -346,12 +301,6 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
         speak(instructions[currentStep]);
       }, 100);
     }
-  };
-
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   // Configurar reconocimiento de voz
@@ -417,24 +366,6 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
       }
     };
   }, [handleVoiceCommand, startRecognition]);
-
-  // Gestión de temporizadores
-  useEffect(() => {
-    let interval = null;
-    if (isTimerRunning && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft(timeLeft => {
-          if (timeLeft <= 1) {
-            setIsTimerRunning(false);
-            showTimerNotification();
-            return 0;
-          }
-          return timeLeft - 1;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isTimerRunning, timeLeft, showTimerNotification]);
 
   // Lectura automática solo cuando cambia el paso
   useEffect(() => {
