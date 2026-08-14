@@ -12,7 +12,7 @@ const RecipeMainHeader = ({ tipo = "generada", isSaved, onCookingMode, onToggleF
                 <ChefHat className="w-8 h-8 text-white" />
                 Tu Receta Personalizada
               </h2>
-              <p className="text-green-100 text-sm">Creada especialmente para ti</p>
+              <p className="text-green-100 text-sm">Creada especialmente para vos</p>
             </>
           ) : tipo === "favorita" ? (
             <>

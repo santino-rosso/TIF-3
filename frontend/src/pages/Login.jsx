@@ -44,7 +44,7 @@ const Login = () => {
                 submitLabel="Iniciar sesión"
                 alternativeLink="/register"
                 alternativeLinkText="Registrarse"
-                alternativeLinkLabel="¿No tenes una cuenta?"
+                alternativeLinkLabel="¿No tenés una cuenta?"
             />
         </AuthPageLayout>
     );

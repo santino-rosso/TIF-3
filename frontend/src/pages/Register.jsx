@@ -37,7 +37,7 @@ const Register = () => {
                 submitLabel="Crear cuenta"
                 alternativeLink="/login"
                 alternativeLinkText="Iniciar sesión"
-                alternativeLinkLabel="¿Ya tienes una cuenta?"
+                alternativeLinkLabel="¿Ya tenés una cuenta?"
             />
         </AuthPageLayout>
     );

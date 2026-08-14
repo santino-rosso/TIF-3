@@ -8,7 +8,7 @@ describe('RecipeMainHeader', () => {
     render(<RecipeMainHeader />);
 
     expect(screen.getByText('Tu Receta Personalizada')).toBeInTheDocument();
-    expect(screen.getByText('Creada especialmente para ti')).toBeInTheDocument();
+    expect(screen.getByText('Creada especialmente para vos')).toBeInTheDocument();
   });
 
   it('renders the favorite recipe title when tipo="favorita"', () => {

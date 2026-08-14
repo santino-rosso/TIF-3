@@ -26,7 +26,7 @@ def extraer_nombre(texto_receta: str) -> str:
                 return linea.replace('**', '').replace(':', '').strip()
         
         # Como último recurso, usar un nombre genérico
-        return "Delicious homemade dish"
+        return "Plato casero delicioso"
         
     except Exception:
-        return "Delicious homemade dish"
+        return "Plato casero delicioso"

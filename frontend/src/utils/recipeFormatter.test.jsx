@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { List, ClipboardList, FileText } from 'lucide-react';
-import { esTituloReceta, formatearReceta, getTituloIcon } from './recipeFormatter';
+import { NUMBERED_STEP_REGEX, NUMBERED_STEP_STRIP_REGEX, esTituloReceta, formatearReceta, getTituloIcon } from './recipeFormatter';
 
 describe('formatearReceta', () => {
   it('returns null for null or empty input', () => {
@@ -105,6 +105,18 @@ describe('getTituloIcon', () => {
 
   it('returns FileText for unknown titles', () => {
     expect(getTituloIcon('Otro título').type).toBe(FileText);
+  });
+});
+
+describe('NUMBERED_STEP_REGEX', () => {
+  it('detects numbered steps', () => {
+    expect(NUMBERED_STEP_REGEX.test('1. Mezclar')).toBe(true);
+    expect(NUMBERED_STEP_REGEX.test('- harina')).toBe(false);
+  });
+
+  it('strips the number prefix', () => {
+    expect('1. Mezclar'.replace(NUMBERED_STEP_STRIP_REGEX, '')).toBe('Mezclar');
+    expect('12. Hornear'.replace(NUMBERED_STEP_STRIP_REGEX, '')).toBe('Hornear');
   });
 });
 

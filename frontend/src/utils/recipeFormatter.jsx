@@ -11,6 +11,10 @@ import {
   FileText,
 } from 'lucide-react';
 
+// Regex para detectar y quitar el prefijo de pasos numerados
+export const NUMBERED_STEP_REGEX = /^\d+\./;
+export const NUMBERED_STEP_STRIP_REGEX = /^\d+\.\s*/;
+
 // Función para detectar si una línea es un título de receta
 export const esTituloReceta = (linea) => {
   const palabrasClave = [
@@ -108,9 +112,9 @@ export const formatearReceta = (texto) => {
       continue;
     }
     // Pasos numerados
-    if (/^\d+\./.test(linea)) {
+    if (NUMBERED_STEP_REGEX.test(linea)) {
       const numero = linea.match(/^(\d+)\./)[1];
-      const contenido = linea.replace(/^\d+\.\s*/, '');
+      const contenido = linea.replace(NUMBERED_STEP_STRIP_REGEX, '');
       pasosActual.push(
         <div className="paso-preparacion flex items-start gap-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-l-4 border-blue-400 shadow-sm mb-3" key={`paso-${i}`}>
           <span className="paso-numero bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold flex-shrink-0 shadow-md">{numero}</span>

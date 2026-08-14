@@ -1,18 +1,19 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { 
-  Play, 
-  Pause, 
-  RotateCcw, 
-  ChefHat, 
-  Clock, 
-  ArrowLeft, 
-  Mic, 
+import {
+  Play,
+  Pause,
+  RotateCcw,
+  ChefHat,
+  Clock,
+  ArrowLeft,
+  Mic,
   MicOff,
   Volume2,
   SkipForward,
   SkipBack
 } from 'lucide-react';
 import { API_BASE_URL } from '../utils/apiConfig';
+import { NUMBERED_STEP_REGEX, NUMBERED_STEP_STRIP_REGEX } from '../utils/recipeFormatter';
 import './CookingMode.css';
 
 const CookingMode = ({ recipe, titulo, onExit }) => {
@@ -56,16 +57,16 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
       if (inInstructionsSection && /^(\*\*)?(ingredientes|notas|consejos|tiempo|utensilios|preferencias|restricciones|tipo de comida|herramientas|nivel de experiencia)(\*\*)?:?/i.test(cleanLine)) {
         break;
       }
-      
+
       // Agregar instrucciones numeradas o con viñetas
       if (inInstructionsSection && (
-        /^\d+\./.test(cleanLine) || 
-        /^-/.test(cleanLine) || 
+        NUMBERED_STEP_REGEX.test(cleanLine) ||
+        /^-/.test(cleanLine) ||
         /^•/.test(cleanLine) ||
         (cleanLine.length > 15 && !cleanLine.includes(':')) // Líneas largas que no sean títulos
       )) {
         const cleanInstruction = cleanLine
-          .replace(/^\d+\.\s*/, '')
+          .replace(NUMBERED_STEP_STRIP_REGEX, '')
           .replace(/^[-•]\s*/, '')
           .trim();
         if (cleanInstruction) {
@@ -78,8 +79,8 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
     if (instructions.length === 0) {
       for (const line of lines) {
         const cleanLine = line.trim();
-        if (/^\d+\./.test(cleanLine)) {
-          const cleanInstruction = cleanLine.replace(/^\d+\.\s*/, '').trim();
+        if (NUMBERED_STEP_REGEX.test(cleanLine)) {
+          const cleanInstruction = cleanLine.replace(NUMBERED_STEP_STRIP_REGEX, '').trim();
           if (cleanInstruction && cleanInstruction.length > 10) {
             instructions.push(cleanInstruction);
           }
@@ -229,7 +230,7 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
   const handleVoiceCommand = useCallback((command) => {
     console.log('Comando de voz:', command);
     console.log('Paso actual:', currentStepRef.current);
-    
+
     if (command.includes('siguiente')) {
       if (currentStepRef.current < instructionsRef.current.length - 1) {
         setCurrentStep(currentStepRef.current + 1);
@@ -237,7 +238,7 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
       } else if (currentStepRef.current === instructionsRef.current.length - 1) {
         setShowCompletion(true);
       }
-      
+
     } else if (command.includes('anterior')) {
       if (currentStepRef.current > 0) {
         setCurrentStep(currentStepRef.current - 1);
@@ -250,7 +251,7 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
       // Solo funciona si hay un tiempo sugerido (botón visible)
       const currentInstruction = instructionsRef.current[currentStepRef.current];
       const suggestedTime = extractTimeFromStep(currentInstruction);
-      
+
       if (suggestedTime) {
         // Usar el currentStepRef para asegurar consistencia
         const seconds = suggestedTime * 60;
@@ -277,7 +278,7 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
       console.log('Reconocimiento de voz no soportado');
       return;
     }
-    
+
     if (isListening) {
       // Detener reconocimiento
       setIsListening(false);
@@ -294,7 +295,7 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
     if ('vibrate' in navigator) {
       navigator.vibrate([200, 100, 200, 100, 200]);
     }
-    
+
     // Notificación
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification('⏰ ¡Tiempo terminado!', {
@@ -303,7 +304,7 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
         vibrate: [200, 100, 200]
       });
     }
-    
+
     // Síntesis de voz
     speak('Tiempo terminado');
   }, [currentStep, speak]);
@@ -338,7 +339,7 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
   const readCurrentStep = () => {
     const newAutoReadState = !autoRead;
     setAutoRead(newAutoReadState);
-    
+
     // Si se está activando la lectura automática, leer la instrucción actual
     if (newAutoReadState && instructions[currentStep]) {
       setTimeout(() => {
@@ -361,7 +362,7 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
       recognitionRef.current.continuous = true;
       recognitionRef.current.interimResults = false;
       recognitionRef.current.lang = 'es-ES';
-      
+
       recognitionRef.current.onstart = () => {
         console.log('Reconocimiento de voz iniciado');
         isRecognitionActiveRef.current = true;
@@ -467,16 +468,16 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
         </div>
         <div className="voice-controls">
           {voiceSupported && (
-            <button 
-              onClick={toggleVoiceRecognition} 
+            <button
+              onClick={toggleVoiceRecognition}
               className={`voice-btn ${isListening ? 'listening' : ''}`}
               title={isListening ? 'Detener reconocimiento de voz' : 'Activar reconocimiento de voz'}
             >
               {isListening ? <MicOff size={20} /> : <Mic size={20} />}
             </button>
           )}
-          <button 
-            onClick={readCurrentStep} 
+          <button
+            onClick={readCurrentStep}
             className={`speak-btn ${autoRead ? 'auto-read-active' : ''}`}
             title={autoRead ? 'Desactivar lectura automática' : 'Activar lectura automática'}
           >
@@ -497,7 +498,7 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
           <div className="step-header">
             <h3>Paso {currentStep + 1}</h3>
           </div>
-          
+
           <div className="step-instruction">
             {currentInstruction}
           </div>
@@ -506,7 +507,7 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
             <div className="timer-suggestion">
               <Clock size={16} />
               Tiempo: {suggestedTime} {suggestedTime>1? "minutos": "minuto"}
-              <button 
+              <button
                 onClick={() => startTimer(suggestedTime)}
                 className="btn-timer-start"
               >
@@ -548,8 +549,8 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
         )}
 
         <div className="step-actions">
-          <button 
-            onClick={prevStep} 
+          <button
+            onClick={prevStep}
             disabled={currentStep === 0}
             className="step-btn step-btn-prev"
           >
@@ -557,8 +558,8 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
             Anterior
           </button>
 
-          <button 
-            onClick={nextStep} 
+          <button
+            onClick={nextStep}
             disabled={showCompletion}
             className="step-btn step-btn-next"
           >
@@ -569,18 +570,18 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
       </div>
 
       {showCompletion && (
-        <div 
+        <div
           className="fixed top-0 left-0 w-screen h-screen z-50 flex items-center justify-center bg-black/80"
           style={{ margin: 0, padding: 0 }}
           onClick={closeCompletion}
         >
-          <div 
+          <div
             className="completion-card"
             onClick={(e) => e.stopPropagation()}
           >
             <h3>¡Receta completada!</h3>
             <p>¡Felicitaciones! Has terminado de cocinar {titulo}</p>
-            
+
             {/* Mostrar imagen de la receta si existe */}
             {recipe.imagen_id && (
               <div className="completion-image">
@@ -594,16 +595,16 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
                 </div>
               </div>
             )}
-            
+
             {/* Botones de acción */}
             <div className="completion-actions">
-              <button 
-                onClick={closeCompletion} 
+              <button
+                onClick={closeCompletion}
                 className="btn-previous"
               >
                 Volver
               </button>
-              
+
               <button onClick={onExit} className="btn-finish">
                 Finalizar cocina
               </button>
