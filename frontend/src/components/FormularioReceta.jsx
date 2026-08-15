@@ -1,25 +1,13 @@
-import { useState, useEffect } from "react";
-import { esFormularioRecetaValido } from "../utils/recipeFormValidation";
 import { useIngredientImageInput } from "../hooks/useIngredientImageInput";
 import { usePlanInfo } from "../hooks/usePlanInfo";
 import { useRecipeGenerationSubmit } from "../hooks/useRecipeGenerationSubmit";
+import { useFormularioReceta } from "../hooks/useFormularioReceta";
 import IngredientInputSection from "./IngredientInputSection";
 import RecipeAdditionalFieldsGrid from "./RecipeAdditionalFieldsGrid";
 import RecipeGenerationControls from "./RecipeGenerationControls";
 import RecipePlanNotice from "./RecipePlanNotice";
 
 const FormularioReceta = () => {
-  const [modoIngredientes, setModoIngredientes] = useState("imagen"); 
-  const [datos, setDatos] = useState({
-    preferencias: "",
-    restricciones: "",
-    tiempo: "",
-    tipo_comida: "",
-    herramientas: "",
-    experiencia: "",
-    ingredientes: "",
-  });
-  const [errores, setErrores] = useState([]);
   const {
     imagen,
     setImagen,
@@ -43,11 +31,16 @@ const FormularioReceta = () => {
     error: planError,
   } = usePlanInfo();
 
-  useEffect(() => {
-    if (planError) {
-      console.error("Error al cargar plan:", planError);
-    }
-  }, [planError]);
+  const {
+    modoIngredientes,
+    datos,
+    errores,
+    handleChange,
+    handleModoChange,
+    formularioValido,
+    setErrores,
+    setDatos,
+  } = useFormularioReceta({ setImagen, cerrarCamara, planError, imagen });
 
   const { loading, handleSubmit } = useRecipeGenerationSubmit({
     datos,
@@ -58,21 +51,6 @@ const FormularioReceta = () => {
     actualizarPlanInfo,
     cargarPlanInfo,
   });
-
-  const handleChange = (e) => {
-    setDatos({ ...datos, [e.target.name]: e.target.value });
-  };
-
-  const handleModoChange = (e) => {
-    setModoIngredientes(e.target.value);
-    // Limpiar campos al cambiar modo
-    setDatos((prev) => ({ ...prev, ingredientes: "" }));
-    setImagen(null);
-    // Cerrar cámara si está abierta
-    cerrarCamara();
-  };
-
-  const formularioValido = esFormularioRecetaValido({ datos, modoIngredientes, imagen });
 
   return (
       <form onSubmit={handleSubmit} className="space-y-6">
