@@ -3,6 +3,7 @@ from app.utils.vector_similarity import find_duplicate_recipe, rank_recipes_by_c
 from datetime import datetime
 from io import BytesIO
 
+
 def obtener_metadata_imagen(imagen_bytes):
     if imagen_bytes.startswith(b"\xff\xd8\xff"):
         return "jpg", "image/jpeg"
@@ -11,6 +12,7 @@ def obtener_metadata_imagen(imagen_bytes):
     if imagen_bytes.startswith(b"RIFF") and imagen_bytes[8:12] == b"WEBP":
         return "webp", "image/webp"
     return "bin", "application/octet-stream"
+
 
 async def guardar_receta(receta_texto, embedding, imagen_bytes, nombre_receta):
     # Guardar imagen en GridFS si existe
@@ -35,6 +37,13 @@ async def guardar_receta(receta_texto, embedding, imagen_bytes, nombre_receta):
     
     # Devolver tanto el ID de la receta como el ID de la imagen
     return str(resultado.inserted_id), str(imagen_id) if imagen_id else None
+
+
+async def obtener_todas_con_embedding():
+    """Retorna todas las recetas que tienen embedding (para recomendaciones)."""
+    cursor = recetas_collection.find({"embedding": {"$exists": True}})
+    return await cursor.to_list(length=None)
+
 
 async def buscar_recetas_similares(embedding_actual, top_k=4):
 
