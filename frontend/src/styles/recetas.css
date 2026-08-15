@@ -110,6 +110,11 @@
   }
 }
 
+/* Border decorativo para recetas con imagen (generadas, favoritas, recomendadas) */
+.receta-imagen-con-borde {
+  border-bottom: 4px solid #22c55e;
+}
+
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
   .receta-container {

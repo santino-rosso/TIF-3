@@ -109,9 +109,8 @@ const RecetaCard = ({ receta, similares, tipo = "generada" }) => {
           <RecipeImagePreview
             imageUrl={`${API_BASE_URL}/imagenes/${receta.imagen_id}`}
             alt={`Imagen generada de ${tituloReceta}`}
-            className="w-full h-64 sm:h-80 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+            className="w-full h-64 sm:h-80 object-cover cursor-pointer hover:opacity-90 transition-opacity receta-imagen-con-borde"
             loading="lazy"
-            style={{ borderBottom: "4px solid #22c55e" }}
             onOpen={() => setShowImageModal(true)}
           />
         )}
