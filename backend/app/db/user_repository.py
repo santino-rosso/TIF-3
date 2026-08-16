@@ -4,7 +4,7 @@ from bson import ObjectId
 from app.db.mongo_client import recetas_collection
 from app.models.plan_model import PlanUsuario, TipoPlan
 from app.db.plan_repository import crear_plan_usuario, normalizar_datetime_utc, obtener_generaciones_periodo_actual
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 async def get_user_by_email(email: str) -> Optional[dict]:
     return await usuarios_collection.find_one({"email": email})
@@ -12,12 +12,16 @@ async def get_user_by_email(email: str) -> Optional[dict]:
 async def create_user(email: str, hashed_password: str):
     # Crear plan gratuito por defecto
     plan_usuario = await crear_plan_usuario(TipoPlan.GRATUITO)
-    
+    ahora = datetime.now(timezone.utc)
+
     return await usuarios_collection.insert_one({
         "email": email,
         "hashed_password": hashed_password,
+        "is_admin": False,
+        "is_active": True,
         "favoritos": [],
-        "plan": plan_usuario.dict()
+        "plan": plan_usuario.dict(),
+        "creado_en": ahora
     })
 
 async def update_user_password(email: str, hashed_password: str):
@@ -134,3 +138,76 @@ async def liberar_generacion_plan(email: str, plan_usuario: PlanUsuario) -> None
         filtro,
         {"$inc": {"plan.generaciones_usadas": -1}}
     )
+
+
+# ===== ADMIN FUNCTIONS =====
+
+async def listar_usuarios_admin(skip: int = 0, limit: int = 50, filtro_activo: Optional[bool] = None, filtro_admin: Optional[bool] = None,
+                                 sort_by: Optional[str] = None, order: int = -1):
+    query = {}
+    if filtro_activo is not None:
+        query["is_active"] = filtro_activo
+    if filtro_admin is not None:
+        query["is_admin"] = filtro_admin
+
+    sort_field = sort_by if sort_by else "creado_en"
+    sort_order = order if order in (1, -1) else -1
+
+    cursor = usuarios_collection.find(query).sort(sort_field, sort_order).skip(skip).limit(limit)
+    usuarios = await cursor.to_list(length=limit)
+    total = await usuarios_collection.count_documents(query)
+    return usuarios, total
+
+
+async def obtener_usuario_por_email_admin(email: str) -> Optional[dict]:
+    return await usuarios_collection.find_one({"email": email})
+
+
+async def toggle_usuario_activo(email: str, activo: bool) -> bool:
+    result = await usuarios_collection.update_one(
+        {"email": email},
+        {"$set": {"is_active": activo}}
+    )
+    return result.modified_count == 1
+
+
+async def toggle_usuario_admin(email: str, admin: bool) -> bool:
+    result = await usuarios_collection.update_one(
+        {"email": email},
+        {"$set": {"is_admin": admin}}
+    )
+    return result.modified_count == 1
+
+
+async def cambiar_plan_usuario(email: str, plan_dict: dict) -> bool:
+    result = await usuarios_collection.update_one(
+        {"email": email},
+        {"$set": {"plan": plan_dict}}
+    )
+    return result.modified_count == 1
+
+
+async def obtener_stats_globales():
+    total_usuarios = await usuarios_collection.count_documents({})
+    usuarios_activos = await usuarios_collection.count_documents({"is_active": True})
+    admins = await usuarios_collection.count_documents({"is_admin": True})
+
+    # Usuarios por plan
+    pipeline_plan = [
+        {"$group": {"_id": "$plan.tipo_plan", "count": {"$sum": 1}}}
+    ]
+    planes_cursor = usuarios_collection.aggregate(pipeline_plan)
+    planes = await planes_cursor.to_list(length=None)
+    distribucion_planes = {p["_id"]: p["count"] for p in planes if p["_id"]}
+
+    # Usuarios registrados últimos 30 días
+    hace_30 = datetime.now(timezone.utc) - timedelta(days=30)
+    nuevos_30 = await usuarios_collection.count_documents({"creado_en": {"$gte": hace_30}})
+
+    return {
+        "total_usuarios": total_usuarios,
+        "usuarios_activos": usuarios_activos,
+        "admins": admins,
+        "distribucion_planes": distribucion_planes,
+        "nuevos_30_dias": nuevos_30
+    }

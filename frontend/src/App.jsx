@@ -8,6 +8,11 @@ import Favoritos from "./pages/Favoritos";
 import Perfil from "./pages/Perfil";
 import Recomendaciones from "./pages/Recomendaciones";
 import Planes from "./pages/Planes";
+import AdminLayout from "./components/AdminLayout";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminRecipes from "./pages/AdminRecipes";
+import AdminStats from "./pages/AdminStats";
+import AdminUsers from "./pages/AdminUsers";
 
 
 function App() {
@@ -22,6 +27,12 @@ function App() {
         <Route path="/perfil" element={<Perfil />} />
         <Route path="/recomendaciones" element={<Recomendaciones />} />
         <Route path="/planes" element={<Planes />} />
+      </Route>
+      <Route element={<AdminLayout />}>
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/recipes" element={<AdminRecipes />} />
+        <Route path="/admin/stats" element={<AdminStats />} />
+        <Route path="/admin/users" element={<AdminUsers />} />
       </Route>
     </Routes>
   );
