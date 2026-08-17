@@ -78,12 +78,11 @@ const Resultados = () => {
       <Navbar />
       
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-green-500 to-green-600 shadow-sm">
+      <div className="bg-green-500 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-6">
           <div className="text-center">
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
               ¡Tu receta está lista! 
-              <span className="text-2xl md:text-3xl ml-2">🎉</span>
             </h1>
             <p className="text-green-100 text-lg">
               Hemos preparado una deliciosa receta personalizada para ti
@@ -103,7 +102,7 @@ const Resultados = () => {
               localStorage.removeItem("recetaGenerada");
               navigate("/");
             }}
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold px-8 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+            className="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold px-8 py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -114,10 +113,10 @@ const Resultados = () => {
       </div>
 
       {/* Footer decorativo */}
-      <div className="mt-16 py-8 bg-gradient-to-r from-green-500 to-blue-500">
+      <div className="mt-16 py-8 bg-green-500">
         <div className="max-w-6xl mx-auto px-4 text-center">
           <p className="text-white text-lg font-medium">
-            ¡Esperamos que disfrutes cocinando! 👨‍🍳✨
+            ¡Esperamos que disfrutes cocinando!
           </p>
         </div>
       </div>

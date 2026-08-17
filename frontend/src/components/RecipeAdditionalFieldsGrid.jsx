@@ -1,4 +1,4 @@
-const fieldClassName = "w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base bg-white text-gray-700";
+const fieldClassName = "w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-base bg-white text-gray-700";
 
 const fields = [
   {

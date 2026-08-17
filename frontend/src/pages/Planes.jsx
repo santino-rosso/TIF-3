@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
 import Navbar from "../components/Navbar";
@@ -11,6 +11,7 @@ const Planes = () => {
   const [loadingPlanes, setLoadingPlanes] = useState(true);
   const [actualizando, setActualizando] = useState(false);
   const [mensaje, setMensaje] = useState("");
+  const messageTimerRef = useRef(null);
   const navigate = useNavigate();
   const { estadisticas, cargarPlanInfo } = usePlanInfo({ autoLoad: false });
 
@@ -42,6 +43,9 @@ const Planes = () => {
     try {
       const res = await axiosInstance.post(`/actualizar-plan/${tipoPlan}`);
       setMensaje(`${res.data.mensaje}`);
+      // Auto-hide después de 5 segundos
+      if (messageTimerRef.current) clearTimeout(messageTimerRef.current);
+      messageTimerRef.current = setTimeout(() => setMensaje(""), 5000);
       // Recargar datos
       await cargarDatos();
       
@@ -50,6 +54,9 @@ const Planes = () => {
     } catch (error) {
       console.error("Error al actualizar plan:", error);
       setMensaje(`${error.response?.data?.error || "Error al actualizar el plan"}`);
+      // Auto-hide después de 5 segundos también en error
+      if (messageTimerRef.current) clearTimeout(messageTimerRef.current);
+      messageTimerRef.current = setTimeout(() => setMensaje(""), 5000);
     } finally {
       setActualizando(false);
     }
@@ -110,7 +117,13 @@ const Planes = () => {
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-3">
                       <div 
-                        className={`h-3 rounded-full transition-all duration-300 ${getColorBarra()}`}
+                        className={`h-3 rounded-full transition-all duration-300 ${
+                          estadisticas.generaciones_restantes === 0
+                            ? 'bg-red-500'
+                            : estadisticas.tipo_plan === 'premium'
+                              ? 'bg-yellow-500'
+                              : 'bg-green-500'
+                        }`}
                         style={{ width: `${getPorcentajeUso()}%` }}
                       ></div>
                     </div>
@@ -125,7 +138,13 @@ const Planes = () => {
               
               <div className="flex items-center justify-center">
                 <div className="text-center">
-                  <div className={`w-24 h-24 rounded-full flex items-center justify-center text-2xl font-bold text-white ${estadisticas.tipo_plan === "premium" ? "bg-gradient-to-br from-yellow-400 to-yellow-600" : "bg-gradient-to-br from-green-400 to-green-600"}`}>
+                  <div className={`w-24 h-24 rounded-full flex items-center justify-center text-2xl font-bold text-white ${
+                        estadisticas.generaciones_restantes === 0
+                          ? "bg-red-500"
+                          : estadisticas.tipo_plan === "premium"
+                            ? "bg-yellow-500"
+                            : "bg-green-500"
+                      }`}>
                     {Math.round(getPorcentajeUso())}%
                   </div>
                   <p className="text-sm text-gray-600 mt-2">Uso del plan</p>
@@ -142,15 +161,13 @@ const Planes = () => {
               key={plan.tipo}
               className={`bg-white rounded-xl shadow-lg overflow-hidden border-2 transition-all duration-300 hover:shadow-xl ${
                 estadisticas?.tipo_plan === plan.tipo 
-                  ? "border-green-500 ring-2 ring-green-200" 
-                  : "border-gray-200 hover:border-green-300"
+                  ? (plan.tipo === "premium" 
+                      ? "border-yellow-500" 
+                      : "border-green-500 ring-2 ring-green-200")
+                  : (plan.tipo === "premium" ? "border-yellow-300 hover:border-yellow-400" : "border-green-300 hover:border-green-400")
               }`}
             >
-              <div className={`p-6 text-center ${
-                plan.tipo === "premium" 
-                  ? "bg-gradient-to-br from-yellow-400 to-yellow-600 text-white" 
-                  : "bg-gradient-to-br from-green-400 to-green-600 text-white"
-              }`}>
+<div className={`p-6 text-center ${plan.tipo === "premium" ? "bg-yellow-500 text-white" : "bg-green-500 text-white"}`}>
                 <div className="flex items-center justify-center mb-2">
                   {plan.tipo === "premium" ? <Crown className="w-8 h-8" /> : <Zap className="w-8 h-8" />}
                 </div>
@@ -164,30 +181,26 @@ const Planes = () => {
                 <p className="text-gray-600 mb-4">{plan.descripcion}</p>
                 
                 <div className="space-y-3 mb-6 min-h-[204px]">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
-                    <span className="text-gray-700">{plan.limite_generaciones_mensual} recetas cada 30 días</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
-                    <span className="text-gray-700">Recetas personalizadas con IA</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
-                    <span className="text-gray-700">Imágenes generadas automáticamente</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
-                    <span className="text-gray-700">Modo cocina interactivo</span>
-                  </div>
+<div className="flex items-center gap-2">
+                      <CheckCircle className={`w-5 h-5 ${plan.tipo === "premium" ? "text-yellow-500" : "text-green-500"}`} />
+                      <span className="text-gray-700">Recetas personalizadas con IA</span>
+                    </div>
+<div className="flex items-center gap-2">
+                      <CheckCircle className={`w-5 h-5 ${plan.tipo === "premium" ? "text-yellow-500" : "text-green-500"}`} />
+                      <span className="text-gray-700">Imágenes generadas automáticamente</span>
+                    </div>
+<div className="flex items-center gap-2">
+                      <CheckCircle className={`w-5 h-5 ${plan.tipo === "premium" ? "text-yellow-500" : "text-green-500"}`} />
+                      <span className="text-gray-700">Modo cocina interactivo</span>
+                    </div>
                   {plan.tipo === "premium" && (
                     <>
                       <div className="flex items-center gap-2">
-                        <CheckCircle className="w-5 h-5 text-green-500" />
+                        <CheckCircle className={`w-5 h-5 ${plan.tipo === "premium" ? "text-yellow-500" : "text-green-500"}`} />
                         <span className="text-gray-700">Soporte prioritario</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <CheckCircle className="w-5 h-5 text-green-500" />
+                        <CheckCircle className={`w-5 h-5 ${plan.tipo === "premium" ? "text-yellow-500" : "text-green-500"}`} />
                         <span className="text-gray-700">Recetas sin límites diarios</span>
                       </div>
                     </>
@@ -195,8 +208,10 @@ const Planes = () => {
                 </div>
                 
                 {estadisticas?.tipo_plan === plan.tipo ? (
-                  <div className="flex items-center justify-center gap-2 py-3 px-6 rounded-lg bg-green-100 text-green-700 font-semibold">
-                    <CheckCircle className="w-5 h-5" />
+                  <div className={`flex items-center justify-center gap-2 py-3 px-6 rounded-lg font-semibold ${
+                    plan.tipo === "premium" ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700"
+                  }`}>
+                    <CheckCircle className={`w-5 h-5 ${plan.tipo === "premium" ? "text-yellow-500" : "text-green-500"}`} />
                     Plan Actual
                   </div>
                 ) : (
@@ -229,10 +244,7 @@ const Planes = () => {
 
         {/* Información adicional */}
         <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-          <h3 className="text-lg font-semibold text-blue-800 mb-2">¿Necesitás más recetas?</h3>
-          <p className="text-blue-600 mb-4">
-            Con el plan Premium podés generar hasta 100 recetas cada 30 días, perfecto para chefs experimentados y familias numerosas.
-          </p>
+          <p className="text-blue-800 mb-4">¿Necesitas generar una receta?</p>
           <button
             onClick={() => navigate("/")}
             className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"

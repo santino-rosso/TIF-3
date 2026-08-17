@@ -13,7 +13,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white text-gray-800 p-4 shadow-lg border-b border-gray-200">
+    <nav className="bg-white text-gray-800 px-8 py-4 shadow-lg border-b border-gray-200">
       <div className="container mx-auto grid grid-cols-3 items-center gap-4">
         <div className="flex justify-start">
           <a 

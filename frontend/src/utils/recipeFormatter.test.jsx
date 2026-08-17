@@ -14,18 +14,18 @@ describe('formatearReceta', () => {
     const { container } = render(<div>{formatearReceta('- harina\n- azúcar')}</div>);
     const ul = container.querySelector('.lista-ingredientes');
     expect(ul).not.toBeNull();
-    const items = screen.getAllByText(/harina|azúcar/);
+    const items = screen.getAllByText(/Harina|Azúcar/);
     expect(items).toHaveLength(2);
-    expect(ul.firstChild.textContent).toContain('harina');
+    expect(ul.firstChild.textContent).toContain('Harina');
   });
 
   it('renders numbered steps', () => {
     const { container } = render(<div>{formatearReceta('1. Mezclar\n2. Hornear')}</div>);
-    const pasos = container.querySelectorAll('.paso-preparacion');
+    const pasos = container.querySelectorAll('.lista-pasos li');
     expect(pasos).toHaveLength(2);
     expect(screen.getByText('Mezclar')).not.toBeNull();
     expect(screen.getByText('Hornear')).not.toBeNull();
-    expect(container.querySelector('.paso-numero').textContent).toBe('1');
+    expect(pasos[0].getAttribute('data-paso')).toBe('1');
   });
 
   it('renders a section header without asterisks or colon', () => {
@@ -74,7 +74,7 @@ describe('formatearReceta', () => {
 
   it('flushes numbered steps before a header', () => {
     const { container } = render(<div>{formatearReceta('1. Mezclar\n\nPreparación:')}</div>);
-    const pasos = container.querySelectorAll('.paso-preparacion');
+    const pasos = container.querySelectorAll('.lista-pasos li');
     expect(pasos).toHaveLength(1);
   });
 
@@ -82,10 +82,10 @@ describe('formatearReceta', () => {
     const { container } = render(<div>{formatearReceta('1. Mezclar\n- harina')}</div>);
     const uls = container.querySelectorAll('.lista-ingredientes');
     expect(uls).toHaveLength(1);
-    const pasos = container.querySelectorAll('.paso-preparacion');
+    const pasos = container.querySelectorAll('.lista-pasos li');
     expect(pasos).toHaveLength(1);
     expect(uls[0].querySelectorAll('li')).toHaveLength(1);
-    expect(container.querySelector('div.space-y-3.ml-2')).not.toBeNull();
+    expect(container.querySelector('ul.lista-pasos')).not.toBeNull();
   });
 });
 

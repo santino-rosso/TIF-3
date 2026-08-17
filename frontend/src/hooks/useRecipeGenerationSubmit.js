@@ -53,11 +53,9 @@ export const useRecipeGenerationSubmit = ({
     try {
       const limite = await verificarLimiteGeneracion();
       if (!limite.puede_generar) {
-        setErrores([
-          limite.razon || "Has alcanzado el límite de recetas en tu período actual.",
-          `Has usado ${limite.generaciones_usadas} de ${limite.limite} recetas en tu período actual.`
-        ]);
+        // Límite alcanzado: no mostramos error, solo abortamos
         await cargarPlanInfo();
+        setErrores([]);
         return;
       }
 

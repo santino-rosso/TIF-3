@@ -34,6 +34,21 @@ describe('useIngredientImageInput', () => {
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:ingredients-preview');
   });
 
+  it('resets the file input value so the same file can be selected again', () => {
+    const { result } = renderHook(() => useIngredientImageInput());
+    const imageFile = new File(['fake-image'], 'ingredients.png', { type: 'image/png' });
+    const input = { target: { files: [imageFile], value: 'C:\\fakepath\\ingredients.png' } };
+
+    act(() => {
+      result.current.handleImagen(input);
+    });
+
+    expect(result.current.imagen).toBe(imageFile);
+    // Sin este reset, el <input type="file"> no dispara onChange
+    // si el usuario vuelve a elegir el MISMO archivo.
+    expect(input.target.value).toBe('');
+  });
+
   it('stops the active camera stream when closed', async () => {
     const stop = vi.fn();
     const getUserMedia = vi.fn().mockResolvedValue({

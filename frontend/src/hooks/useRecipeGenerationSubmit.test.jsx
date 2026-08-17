@@ -86,10 +86,8 @@ describe('useRecipeGenerationSubmit', () => {
 
     expect(event.preventDefault).toHaveBeenCalled();
     expect(axiosInstance.get).toHaveBeenCalledWith('/verificar-limite');
-    expect(props.setErrores).toHaveBeenLastCalledWith([
-      'Plan limit reached',
-      'Has usado 5 de 5 recetas en tu período actual.',
-    ]);
+    // No error messages should be set; errors cleared
+    expect(props.setErrores).toHaveBeenLastCalledWith([]);
     expect(props.cargarPlanInfo).toHaveBeenCalled();
     expect(validarIngredientes).not.toHaveBeenCalled();
     expect(axiosInstance.post).not.toHaveBeenCalled();

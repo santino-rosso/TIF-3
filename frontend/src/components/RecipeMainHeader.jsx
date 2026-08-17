@@ -3,7 +3,7 @@ import { ChefHat } from 'lucide-react';
 
 const RecipeMainHeader = ({ tipo = "generada", isSaved, onCookingMode, onToggleFavorite }) => {
   return (
-    <div className="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4">
+    <div className="bg-green-500 px-6 py-4 rounded-t-xl">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
           {tipo === "generada" ? (
@@ -35,7 +35,7 @@ const RecipeMainHeader = ({ tipo = "generada", isSaved, onCookingMode, onToggleF
         <div className="flex flex-col sm:flex-row gap-3">
           <button
             onClick={onCookingMode}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all transform hover:scale-105 bg-blue-500 hover:bg-blue-600 text-white"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all bg-blue-500 hover:bg-blue-600 text-white"
           >
             <ChefHat className="w-5 h-5" />
             <span className="hidden sm:inline">Modo Cocina</span>

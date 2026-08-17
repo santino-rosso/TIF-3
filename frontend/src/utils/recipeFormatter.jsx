@@ -15,6 +15,16 @@ import {
 export const NUMBERED_STEP_REGEX = /^\d+\./;
 export const NUMBERED_STEP_STRIP_REGEX = /^\d+\.\s*/;
 
+// Pone la primera letra de cada palabra en mayúscula
+export const toTitleCase = (texto) => {
+  if (!texto) return '';
+  return texto
+    .toLowerCase()
+    .split(' ')
+    .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1))
+    .join(' ');
+};
+
 // Función para detectar si una línea es un título de receta
 export const esTituloReceta = (linea) => {
   const palabrasClave = [
@@ -50,19 +60,31 @@ export const formatearReceta = (texto) => {
   let listaActual = [];
   let pasosActual = [];
 
+  // Función para determinar la clase de lista según la sección
+  const getListaClass = (seccion) => {
+    const seccionLower = seccion.toLowerCase();
+    if (seccionLower.includes('preferencias')) return 'lista-ingredientes lista-preferencias';
+    if (seccionLower.includes('restricciones')) return 'lista-ingredientes lista-restricciones';
+    if (seccionLower.includes('herramientas') || seccionLower.includes('utensilios')) return 'lista-ingredientes lista-herramientas';
+    return 'lista-ingredientes';
+  };
+
+  let seccionActual = 'default';
+
   for (let i = 0; i < lineas.length; i++) {
     const linea = lineas[i].trim();
     // Líneas vacías: cierran listas/pasos
     if (!linea) {
       if (listaActual.length > 0) {
+        const className = getListaClass(seccionActual);
         bloques.push(
-          <ul className="lista-ingredientes space-y-1 ml-4" key={`ul-${i}`}>{listaActual}</ul>
+          <ul className={`${className} space-y-1 ml-4`} key={`ul-${i}`}>{listaActual}</ul>
         );
         listaActual = [];
       }
       if (pasosActual.length > 0) {
         bloques.push(
-          <div className="space-y-3 ml-2" key={`pasos-${i}`}>{pasosActual}</div>
+          <ul className="lista-pasos space-y-3 ml-4" key={`pasos-${i}`}>{pasosActual}</ul>
         );
         pasosActual = [];
       }
@@ -72,18 +94,25 @@ export const formatearReceta = (texto) => {
     // Títulos
     if ((linea.includes('**') && linea.includes(':')) || linea.endsWith(':') || esTituloReceta(linea)) {
       if (listaActual.length > 0) {
+        const className = getListaClass(seccionActual);
         bloques.push(
-          <ul className="lista-ingredientes space-y-1 ml-4" key={`ul-${i}`}>{listaActual}</ul>
+          <ul className={`${className} space-y-1 ml-4`} key={`ul-${i}`}>{listaActual}</ul>
         );
         listaActual = [];
       }
       if (pasosActual.length > 0) {
         bloques.push(
-          <div className="space-y-3 ml-2" key={`pasos-${i}`}>{pasosActual}</div>
+          <ul className="lista-pasos space-y-3 ml-4" key={`pasos-${i}`}>{pasosActual}</ul>
         );
         pasosActual = [];
       }
       let titulo = linea.replace(/\*\*/g, '').replace(':', '').trim();
+      // Actualizar sección actual para los bullets
+      const tituloLower = titulo.toLowerCase();
+      if (tituloLower.includes('preferencias dietéticas')) seccionActual = 'preferencias';
+      else if (tituloLower.includes('restricciones')) seccionActual = 'restricciones';
+      else if (tituloLower.includes('herramientas') || tituloLower.includes('utensilios')) seccionActual = 'herramientas';
+      else seccionActual = 'default';
       // Si es el nombre de la receta, extraer solo el nombre y no mostrar icono
       let showIcon = true;
       if (/^nombre de la receta/i.test(titulo)) {
@@ -104,9 +133,8 @@ export const formatearReceta = (texto) => {
     if (linea.startsWith('-')) {
       const contenido = linea.substring(1).trim();
       listaActual.push(
-        <li className="flex items-start gap-3 py-2" key={`li-${i}`}>
-          <span className="bg-gradient-to-r from-green-400 to-green-500 rounded-full w-2 h-2 mt-2 flex-shrink-0 shadow-sm"></span>
-          <span className="text-gray-700 leading-relaxed">{contenido}</span>
+        <li className="flex items-center gap-3 py-2" key={`li-${i}`}>
+          <span className="text-gray-700 leading-relaxed">{toTitleCase(contenido)}</span>
         </li>
       );
       continue;
@@ -116,12 +144,9 @@ export const formatearReceta = (texto) => {
       const numero = linea.match(/^(\d+)\./)[1];
       const contenido = linea.replace(NUMBERED_STEP_STRIP_REGEX, '');
       pasosActual.push(
-        <div className="paso-preparacion flex items-start gap-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-l-4 border-blue-400 shadow-sm mb-3" key={`paso-${i}`}>
-          <span className="paso-numero bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold flex-shrink-0 shadow-md">{numero}</span>
-          <div className="flex-1">
-            <span className="text-gray-800 leading-relaxed font-medium">{contenido}</span>
-          </div>
-        </div>
+        <li className="flex items-center gap-3 py-2" data-paso={numero} key={`paso-${i}`}>
+          <span className="text-gray-700 leading-relaxed">{contenido}</span>
+        </li>
       );
       continue;
     }
@@ -129,14 +154,15 @@ export const formatearReceta = (texto) => {
     if (linea.includes('Tiempo') || linea.includes('Porciones') || linea.includes('Dificultad') ||
         linea.includes('Calorías') || linea.includes('Costo') || linea.includes('Rendimiento')) {
       if (listaActual.length > 0) {
+        const className = getListaClass(seccionActual);
         bloques.push(
-          <ul className="lista-ingredientes space-y-1 ml-4" key={`ul-${i}`}>{listaActual}</ul>
+          <ul className={`${className} space-y-1 ml-4`} key={`ul-${i}`}>{listaActual}</ul>
         );
         listaActual = [];
       }
       if (pasosActual.length > 0) {
         bloques.push(
-          <div className="space-y-3 ml-2" key={`pasos-${i}`}>{pasosActual}</div>
+          <ul className="lista-pasos space-y-3 ml-4" key={`pasos-${i}`}>{pasosActual}</ul>
         );
         pasosActual = [];
       }
@@ -152,30 +178,32 @@ export const formatearReceta = (texto) => {
     }
     // Párrafos normales
     if (listaActual.length > 0) {
+      const className = getListaClass(seccionActual);
       bloques.push(
-        <ul className="lista-ingredientes space-y-1 ml-4" key={`ul-${i}`}>{listaActual}</ul>
+        <ul className={`${className} space-y-1 ml-4`} key={`ul-${i}`}>{listaActual}</ul>
       );
       listaActual = [];
     }
-    if (pasosActual.length > 0) {
+if (pasosActual.length > 0) {
+        bloques.push(
+          <ul className="lista-pasos space-y-3 ml-4 ml-4" key={`pasos-${i}`}>{pasosActual}</ul>
+        );
+        pasosActual = [];
+      }
       bloques.push(
-        <div className="space-y-3 ml-2" key={`pasos-${i}`}>{pasosActual}</div>
-      );
-      pasosActual = [];
-    }
-    bloques.push(
       <p className="text-gray-700 mb-3 leading-relaxed" key={`p-${i}`}>{linea}</p>
     );
   }
   // Cierra listas/pasos al final
   if (listaActual.length > 0) {
+    const className = getListaClass(seccionActual);
     bloques.push(
-      <ul className="lista-ingredientes space-y-1 ml-4" key={`ul-final`}>{listaActual}</ul>
+      <ul className={`${className} space-y-1 ml-4`} key={`ul-final`}>{listaActual}</ul>
     );
   }
   if (pasosActual.length > 0) {
     bloques.push(
-      <div className="space-y-3 ml-2" key={`pasos-final`}>{pasosActual}</div>
+      <ul className="lista-pasos space-y-3 ml-4 ml-4" key={`pasos-final`}>{pasosActual}</ul>
     );
   }
   return bloques;

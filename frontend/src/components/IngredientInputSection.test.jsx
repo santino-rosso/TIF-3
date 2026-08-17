@@ -59,7 +59,7 @@ describe('IngredientInputSection', () => {
 
     await user.click(screen.getByRole('button', { name: /usar cámara/i }));
     expect(onIniciarCamara).toHaveBeenCalledTimes(1);
-    expect(screen.getByText('ingredients.png')).toBeInTheDocument();
+    expect(screen.getByText('Imagen seleccionada:')).toBeInTheDocument();
     expect(screen.getByAltText('Vista previa de ingredientes')).toHaveAttribute('src', 'blob:ingredients-preview');
 
     await user.click(screen.getByRole('button', { name: '❌' }));
@@ -80,7 +80,7 @@ describe('IngredientInputSection', () => {
     expect(screen.getByText('Iniciando cámara...')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /capturar/i }));
-    await user.click(screen.getByRole('button', { name: /cancelar/i }));
+    await user.click(screen.getByTestId('modal-overlay'));
 
     expect(onCapturarFoto).toHaveBeenCalledTimes(1);
     expect(onCerrarCamara).toHaveBeenCalledTimes(1);

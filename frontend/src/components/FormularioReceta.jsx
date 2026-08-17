@@ -82,6 +82,7 @@ const FormularioReceta = () => {
           loading={loading}
           errors={errores}
           isFormValid={formularioValido}
+          limitReached={planInfo?.generaciones_restantes === 0}
         />
       </form>
   );

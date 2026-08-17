@@ -95,7 +95,7 @@ const RecetaCard = ({ receta, similares, tipo = "generada" }) => {
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       {/* Receta Principal */}
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+      <div className="bg-white rounded-xl shadow-lg border border-gray-100">
         {/* Header de la receta */}
         <RecipeMainHeader
           tipo={tipo}
@@ -118,7 +118,7 @@ const RecetaCard = ({ receta, similares, tipo = "generada" }) => {
         {/* Contenido de la receta */}
         <div className="p-6">
           <div className="prose prose-gray max-w-none">
-            <div className="receta-container bg-gray-50 rounded-lg p-6 border-l-4 border-green-500">
+            <div className="receta-container bg-gray-50 rounded-lg p-6">
               <div className="texto-receta text-gray-800 leading-relaxed">
                 {formatearReceta(receta.texto_receta || receta)}
               </div>

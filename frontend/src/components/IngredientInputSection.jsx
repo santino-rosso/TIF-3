@@ -1,3 +1,5 @@
+import { createPortal } from "react-dom";
+
 const IngredientInputSection = ({
   modoIngredientes,
   ingredientes,
@@ -14,7 +16,8 @@ const IngredientInputSection = ({
   onIniciarCamara,
   onCapturarFoto,
   onCerrarCamara,
-}) => (
+}) => {
+  return (
   <>
     {/* Modo de ingredientes */}
     <div className="bg-gray-50 p-4 rounded-lg">
@@ -27,8 +30,8 @@ const IngredientInputSection = ({
         onChange={onModoChange}
         className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-base bg-white text-gray-700"
       >
-        <option value="imagen">📷 Subir imagen o usar cámara</option>
-        <option value="texto">✍️ Ingresarlos manualmente</option>
+        <option value="imagen">Subir imagen o usar cámara</option>
+        <option value="texto">Ingresarlos manualmente</option>
       </select>
     </div>
 
@@ -88,13 +91,7 @@ const IngredientInputSection = ({
               {imagen && imagenPreviewUrl && (
                 <div className="border-2 border-green-300 rounded-lg p-4 bg-green-50">
                   <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center">
-                      <span className="text-green-600 text-2xl mr-3">✅</span>
-                      <div>
-                        <p className="text-green-800 font-medium">Imagen seleccionada:</p>
-                        <p className="text-green-600 text-sm">{imagen.name}</p>
-                      </div>
-                    </div>
+                    <p className="text-green-800 font-medium">Imagen seleccionada:</p>
                     <button
                       type="button"
                       onClick={onClearImagen}
@@ -117,9 +114,17 @@ const IngredientInputSection = ({
               )}
             </div>
           ) : (
-            /* Modal de cámara */
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
-              <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            /* Modal de cámara (portal al body para que el overlay cubra toda la pantalla) */
+            createPortal(
+              <div
+                data-testid="modal-overlay"
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
+                onClick={onCerrarCamara}
+              >
+                <div
+                  className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
+                  onClick={(e) => e.stopPropagation()}
+                >
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-semibold text-gray-800">Capturar foto</h3>
                   <button
@@ -148,7 +153,7 @@ const IngredientInputSection = ({
                     )}
                   </div>
 
-                  <div className="flex justify-center space-x-4">
+                  <div className="flex justify-center">
                     <button
                       type="button"
                       onClick={onCapturarFoto}
@@ -162,17 +167,12 @@ const IngredientInputSection = ({
                         Capturar
                       </span>
                     </button>
-                    <button
-                      type="button"
-                      onClick={onCerrarCamara}
-                      className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
-                    >
-                      Cancelar
-                    </button>
                   </div>
                 </div>
               </div>
-            </div>
+              </div>,
+              document.body
+            )
           )}
 
           {/* Canvas oculto para capturar la foto */}
@@ -181,6 +181,7 @@ const IngredientInputSection = ({
       )}
     </div>
   </>
-);
+  );
+};
 
 export default IngredientInputSection;

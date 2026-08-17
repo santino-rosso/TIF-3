@@ -7,7 +7,7 @@ const HeartIcon = ({ isSaved, className }) => (
 export const RecipeFavoriteButton = ({ isSaved, onClick, variant = 'main' }) => {
   const savedClasses = isSaved
     ? 'bg-red-500 hover:bg-red-600 text-white'
-    : 'bg-white hover:bg-gray-50 text-green-600';
+    : 'bg-white hover:bg-gray-200 text-green-600';
 
   if (variant === 'similar') {
     return (
@@ -26,7 +26,7 @@ export const RecipeFavoriteButton = ({ isSaved, onClick, variant = 'main' }) => 
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all transform hover:scale-105 ${savedClasses}`}
+      className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${savedClasses}`}
     >
       <HeartIcon isSaved={isSaved} className="w-5 h-5" />
       <span className="hidden sm:inline">

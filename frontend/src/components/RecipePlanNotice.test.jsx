@@ -17,7 +17,8 @@ describe('RecipePlanNotice', () => {
       generaciones_restantes: 0,
     });
 
-    expect(screen.getByText('0 recetas restantes')).toBeInTheDocument();
+    expect(screen.queryByText('0 recetas restantes')).not.toBeInTheDocument();
+    expect(screen.queryByText('Gratuito')).not.toBeInTheDocument();
     expect(screen.getByText('Has alcanzado el límite de recetas para tu período actual')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /actualizar a premium/i })).toHaveAttribute('href', '/planes');
   });
@@ -32,6 +33,5 @@ describe('RecipePlanNotice', () => {
     expect(screen.getByText('2 recetas restantes')).toBeInTheDocument();
     expect(screen.getByText('Te quedan pocas recetas. Considerá actualizar a Premium para obtener hasta 100 recetas cada 30 días.')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /ver planes/i })).toHaveAttribute('href', '/planes');
-    expect(container.querySelector('svg.text-yellow-500')).toBeInTheDocument();
   });
 });

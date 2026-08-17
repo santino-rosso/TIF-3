@@ -106,13 +106,17 @@ describe('FormularioReceta', () => {
 
     await user.selectOptions(screen.getByLabelText(/cómo querés ingresar los ingredientes/i), 'texto');
     await user.type(screen.getByLabelText('Ingredientes'), 'tomate, arroz');
-    await user.click(screen.getByRole('button', { name: /generar receta/i }));
+    const generateButton = screen.getByRole('button', { name: /generar receta/i });
+    await user.click(generateButton);
 
-    expect(await screen.findByText('Plan limit reached')).toBeInTheDocument();
+    // No error text should appear
+    expect(screen.queryByText('Plan limit reached')).not.toBeInTheDocument();
+    expect(screen.queryByText('Has alcanzado el límite')).not.toBeInTheDocument();
+    // Button should be disabled
+    expect(generateButton).toBeDisabled();
     expect(axiosInstance.get).toHaveBeenCalledWith('/verificar-limite');
     expect(validarIngredientes).not.toHaveBeenCalled();
     expect(axiosInstance.post).not.toHaveBeenCalled();
-    expect(screen.getByRole('button', { name: /generar receta/i })).toBeEnabled();
   });
 
   it('generates a recipe with the validated ingredient payload and finishes loading', async () => {

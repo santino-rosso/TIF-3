@@ -208,10 +208,14 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
     extractTimeFromStep,
     formatTime,
   } = useCookingTimer({ speak, currentStep });
-
-  const handleVoiceCommand = useCallback((command) => {
+const handleVoiceCommand = useCallback((command) => {
     console.log('Comando de voz:', command);
     console.log('Paso actual:', currentStepRef.current);
+
+    // Obtener tiempo sugerido del paso actual
+    const currentInstruction = instructionsRef.current[currentStepRef.current];
+    const suggestedTime = extractTimeFromStep(currentInstruction);
+    const hasTimer = !!suggestedTime;
 
     if (command.includes('siguiente')) {
       if (currentStepRef.current < instructionsRef.current.length - 1) {
@@ -229,22 +233,23 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
       }
     } else if (command.includes('repetir')) {
       speak(instructionsRef.current[currentStepRef.current]);
-    } else if (command.includes('iniciar') || command.includes('reiniciar')) {
-      // Solo funciona si hay un tiempo sugerido (botón visible)
-      const currentInstruction = instructionsRef.current[currentStepRef.current];
-      const suggestedTime = extractTimeFromStep(currentInstruction);
 
-      if (suggestedTime) {
-        // Usar el currentStepRef para asegurar consistencia
-        const seconds = suggestedTime * 60;
-        setTimeLeft(seconds);
-        setActiveTimer(currentStepRef.current);
-        setIsTimerRunning(true);
-        speak(`Temporizador iniciado por ${suggestedTime} minutos`);
-      } else {
+    } else if (command.includes('iniciar') || command.includes('reiniciar')) {
+      if (!hasTimer) {
         speak('No hay temporizador disponible para este paso');
+        return;
       }
+      const seconds = suggestedTime * 60;
+      setTimeLeft(seconds);
+      setActiveTimer(currentStepRef.current);
+      setIsTimerRunning(true);
+      speak(`Temporizador iniciado por ${suggestedTime} minutos`);
+
     } else if (command.includes('pausar') || command.includes('reanudar')) {
+      if (!hasTimer) {
+        speak('No hay temporizador disponible para este paso');
+        return;
+      }
       const wasRunning = isTimerRunningRef.current;
       pauseTimer();
       if (wasRunning) {
@@ -444,7 +449,7 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
 
           {voiceSupported && (
             <div className="voice-commands">
-              <h4>Comandos de voz disponibles:</h4>
+              <h4>Comandos de voz disponibles</h4>
               <ul>
                 <li>"Siguiente" - Avanzar al siguiente paso</li>
                 <li>"Anterior" - Volver al paso anterior</li>

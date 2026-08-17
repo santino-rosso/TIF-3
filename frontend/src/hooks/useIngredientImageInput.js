@@ -43,7 +43,11 @@ export const useIngredientImageInput = ({ onCameraReady, onCameraError } = {}) =
   }, [imagen]);
 
   const handleImagen = (e) => {
-    setImagen(e.target.files[0]);
+    const archivo = e.target.files?.[0] ?? null;
+    // Resetear el valor permite volver a seleccionar el MISMO archivo:
+    // sin esto, el input no dispara onChange la segunda vez.
+    e.target.value = "";
+    setImagen(archivo);
   };
 
   const cerrarCamara = () => {
