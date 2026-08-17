@@ -21,9 +21,11 @@ export default function AdminRecipes() {
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [conImagen, setConImagen] = useState(null);
+  const [error, setError] = useState(null);
 
   const fetchRecipes = async () => {
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams({
         skip: pagination.pageIndex * pagination.pageSize,
@@ -40,6 +42,7 @@ export default function AdminRecipes() {
       setTotal(res.data.total || 0);
     } catch (err) {
       console.error(err);
+      setError("No se pudieron cargar las recetas");
     } finally {
       setLoading(false);
     }
@@ -110,7 +113,10 @@ export default function AdminRecipes() {
 <button
                   onClick={() => {
                     if (confirm("¿Eliminar esta receta?")) {
-                      api.delete(`/admin/recipes/${recipe._id}`).then(fetchRecipes);
+                      api
+                        .delete(`/admin/recipes/${recipe._id}`)
+                        .then(fetchRecipes)
+                        .catch(() => setError("No se pudo eliminar la receta"));
                     }
                   }}
                   className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
@@ -171,6 +177,18 @@ export default function AdminRecipes() {
         </div>
       </div>
 
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 mb-4 flex items-center justify-between">
+          <p className="text-sm">{error}</p>
+          <button
+            onClick={fetchRecipes}
+            className="text-sm font-medium text-red-700 hover:underline"
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
+
       {loading ? (
         <div className="animate-pulse space-y-4">
           {[...Array(5)].map((_, i) => (
@@ -212,7 +230,7 @@ export default function AdminRecipes() {
                 ))}
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {table.getRowModel().rows.length === 0 ? (
+                {table.getRowModel().rows.length === 0 && !error ? (
                   <tr>
                     <td colSpan={5} className="px-4 py-12 text-center text-gray-500">
                       No se encontraron recetas

@@ -153,14 +153,14 @@ async def listar_usuarios_admin(skip: int = 0, limit: int = 50, filtro_activo: O
     sort_field = sort_by if sort_by else "creado_en"
     sort_order = order if order in (1, -1) else -1
 
-    cursor = usuarios_collection.find(query).sort(sort_field, sort_order).skip(skip).limit(limit)
+    cursor = usuarios_collection.find(query, {"hashed_password": 0}).sort(sort_field, sort_order).skip(skip).limit(limit)
     usuarios = await cursor.to_list(length=limit)
     total = await usuarios_collection.count_documents(query)
     return usuarios, total
 
 
 async def obtener_usuario_por_email_admin(email: str) -> Optional[dict]:
-    return await usuarios_collection.find_one({"email": email})
+    return await usuarios_collection.find_one({"email": email}, {"hashed_password": 0})
 
 
 async def toggle_usuario_activo(email: str, activo: bool) -> bool:
@@ -175,14 +175,6 @@ async def toggle_usuario_admin(email: str, admin: bool) -> bool:
     result = await usuarios_collection.update_one(
         {"email": email},
         {"$set": {"is_admin": admin}}
-    )
-    return result.modified_count == 1
-
-
-async def cambiar_plan_usuario(email: str, plan_dict: dict) -> bool:
-    result = await usuarios_collection.update_one(
-        {"email": email},
-        {"$set": {"plan": plan_dict}}
     )
     return result.modified_count == 1
 

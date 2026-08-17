@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
+from typing import Optional
 from app.services.auth_service import require_admin
 from app.db.user_repository import (
     listar_usuarios_admin,
@@ -11,6 +12,7 @@ from app.db.user_repository import (
 )
 from app.db.plan_repository import crear_plan_usuario
 from app.models.plan_model import TipoPlan
+from app.models.usuario_model import UserAdminUpdate
 from app.db.receta_repository import recetas_collection
 from app.db.mongo_client import generaciones_collection, usuarios_collection
 from datetime import datetime, timezone, timedelta
@@ -120,24 +122,21 @@ async def obtener_usuario(email: str, current_user: dict = Depends(require_admin
 @router.patch("/users/{email}")
 async def actualizar_usuario(
     email: str,
-    datos: dict,
+    datos: UserAdminUpdate,
     current_user: dict = Depends(require_admin)
 ):
     resultados = {}
 
-    if "is_active" in datos:
-        ok = await toggle_usuario_activo(email, datos["is_active"])
+    if datos.is_active is not None:
+        ok = await toggle_usuario_activo(email, datos.is_active)
         resultados["is_active"] = ok
 
-    if "is_admin" in datos:
-        ok = await toggle_usuario_admin(email, datos["is_admin"])
+    if datos.is_admin is not None:
+        ok = await toggle_usuario_admin(email, datos.is_admin)
         resultados["is_admin"] = ok
 
-    if "plan" in datos:
-        try:
-            tipo_plan = TipoPlan(datos["plan"]["tipo_plan"])
-        except (KeyError, ValueError):
-            return JSONResponse(content={"error": "Tipo de plan inválido"}, status_code=400)
+    if datos.plan is not None:
+        tipo_plan = TipoPlan(datos.plan["tipo_plan"])
         nuevo_plan = await crear_plan_usuario(tipo_plan)
         result = await actualizar_plan_usuario(email, nuevo_plan)
         resultados["plan"] = result.modified_count == 1
@@ -154,6 +153,9 @@ async def listar_recetas_admin(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
     con_imagen: bool | None = Query(None),
+    search: Optional[str] = Query(None),
+    sort: Optional[str] = Query(None),
+    order: Optional[str] = Query("desc"),
     current_user: dict = Depends(require_admin)
 ):
     query = {}
@@ -163,7 +165,13 @@ async def listar_recetas_admin(
         else:
             query["imagen_id"] = None
 
-    cursor = recetas_collection.find(query).sort("fecha", -1).skip(skip).limit(limit)
+    if search:
+        query["texto_receta"] = {"$regex": search, "$options": "i"}
+
+    sort_field = sort if sort in ("fecha",) else "fecha"
+    sort_order = 1 if order == "asc" else -1
+
+    cursor = recetas_collection.find(query).sort(sort_field, sort_order).skip(skip).limit(limit)
     recetas = await cursor.to_list(length=limit)
     total = await recetas_collection.count_documents(query)
 

@@ -1,5 +1,6 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { LayoutDashboard, Users, BookOpen, BarChart2, LogOut } from "lucide-react";
+import { logout } from "../utils/logout";
 
 const navItems = [
   { path: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -9,7 +10,7 @@ const navItems = [
 ];
 
 const AdminSidebar = () => {
-  const location = useLocation();
+  const navigate = useNavigate();
 
   return (
     <aside className="w-64 bg-white border-r border-gray-200 min-h-screen flex flex-col">
@@ -35,7 +36,10 @@ const AdminSidebar = () => {
         ))}
       </nav>
       <div className="p-4 border-t border-gray-200">
-        <button className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+        <button
+          onClick={() => logout(navigate)}
+          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+        >
           <LogOut className="w-5 h-5" />
           Cerrar sesión
         </button>

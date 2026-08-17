@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from datetime import datetime
 from typing import Optional
 from app.models.plan_model import PlanUsuario, TipoPlan
@@ -30,6 +30,17 @@ class UserAdminUpdate(BaseModel):
     is_active: Optional[bool] = None
     is_admin: Optional[bool] = None
     plan: Optional[dict] = None
+
+    @field_validator("plan")
+    @classmethod
+    def validar_plan(cls, v):
+        if v is None:
+            return v
+        tipo = v.get("tipo_plan")
+        if tipo is None:
+            raise ValueError("plan.tipo_plan es requerido")
+        TipoPlan(tipo)  # valida que sea un tipo conocido
+        return v
 
 class UserLogout(BaseModel):
     refresh_token: str
