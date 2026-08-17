@@ -1,3 +1,4 @@
+import re
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from typing import Optional
@@ -166,7 +167,7 @@ async def listar_recetas_admin(
             query["imagen_id"] = None
 
     if search:
-        query["texto_receta"] = {"$regex": search, "$options": "i"}
+        query["texto_receta"] = {"$regex": re.escape(search), "$options": "i"}
 
     sort_field = sort if sort in ("fecha",) else "fecha"
     sort_order = 1 if order == "asc" else -1
