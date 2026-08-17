@@ -10,6 +10,7 @@ from app.routers.favoritos_routes import router as favoritos_router
 from app.db.plan_repository import inicializar_planes
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
+from app.rate_limit import limiter, RateLimitExceededError, rate_limit_exceeded_handler
 
 
 @asynccontextmanager
@@ -37,6 +38,9 @@ async def lifespan(app: FastAPI):
     print("Conexión a la base de datos cerrada.")
 
 app = FastAPI(title="API de Recetas con Gemini", lifespan=lifespan)
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceededError, rate_limit_exceeded_handler)
 
 app.include_router(receta_router, prefix="/api", tags=["Recetas"])
 app.include_router(user_router, prefix="/api", tags=["Usuarios"])

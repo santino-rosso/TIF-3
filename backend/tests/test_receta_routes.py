@@ -1,12 +1,29 @@
 import asyncio
 import json
 
+from starlette.requests import Request
+
 from app.routers import receta_routes
 from app.services.gemini_service import GeminiGenerationError
 
 
 def response_json(response):
     return json.loads(response.body.decode("utf-8"))
+
+
+def fake_request():
+    return Request(
+        {
+            "type": "http",
+            "path": "/api/generar-receta",
+            "method": "POST",
+            "query_string": b"",
+            "headers": [],
+            "client": ("testclient", 50000),
+            "server": ("test", 80),
+            "scheme": "http",
+        }
+    )
 
 
 def patch_successful_quota(monkeypatch, released):
@@ -87,6 +104,7 @@ def test_generar_receta_libera_cupo_y_corta_pipeline_si_falla_generacion(monkeyp
 
     response = asyncio.run(
         receta_routes.generar_receta(
+            request=fake_request(),
             ingredientes="arroz, tomate",
             current_user={"email": "user@example.com"},
         )
@@ -143,6 +161,7 @@ def test_generar_receta_libera_cupo_y_corta_pipeline_si_falla_validacion(monkeyp
 
     response = asyncio.run(
         receta_routes.generar_receta(
+            request=fake_request(),
             ingredientes="arroz, tomate",
             current_user={"email": "user@example.com"},
         )

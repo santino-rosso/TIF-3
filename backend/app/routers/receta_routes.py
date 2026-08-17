@@ -1,6 +1,6 @@
 import asyncio
 
-from fastapi import APIRouter, Depends, File, Form, UploadFile
+from fastapi import APIRouter, Depends, File, Form, UploadFile, Request
 from fastapi.responses import JSONResponse
 from app.services.gemini_service import GeminiGenerationError, generar_receta_gemini, detectar_ingredientes_gemini, validar_y_adaptar_receta_con_gemini, generar_imagen_receta
 from app.services.embedding_service import generar_embedding
@@ -14,6 +14,7 @@ from app.services.auth_service import get_current_user
 from app.kag.validador import validar_ingredientes_con_restricciones
 from app.services.recomendador_service import obtener_recomendaciones_por_favoritos
 from app.utils.extraer_nombre_receta import extraer_nombre
+from app.rate_limit import limiter
 
 router = APIRouter()
 
@@ -65,7 +66,8 @@ async def validar_ingredientes(restricciones: str = Form(""), ingredientes: str 
     }, status_code=200)
 
 @router.post("/generar-receta")
-async def generar_receta(ingredientes: str = Form(""), preferencias: str = Form(""), restricciones: str = Form(""), tiempo: str = Form(""), tipo_comida: str = Form(""), herramientas: str = Form(""), experiencia: str = Form(""), current_user: dict = Depends(get_current_user)):
+@limiter.limit("10/minute")
+async def generar_receta(request: Request, ingredientes: str = Form(""), preferencias: str = Form(""), restricciones: str = Form(""), tiempo: str = Form(""), tipo_comida: str = Form(""), herramientas: str = Form(""), experiencia: str = Form(""), current_user: dict = Depends(get_current_user)):
     datos_receta = DatosReceta(
         preferencias=preferencias,
         restricciones=restricciones,

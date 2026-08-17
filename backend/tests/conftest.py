@@ -11,3 +11,7 @@ os.environ.setdefault("CORS_ORIGINS", "http://localhost:5173")
 os.environ.setdefault("IMAGE_GENERATION_PROVIDER", "cloudflare")
 os.environ.setdefault("CLOUDFLARE_ACCOUNT_ID", "")
 os.environ.setdefault("CLOUDFLARE_API_TOKEN", "")
+
+from app.main import app
+
+app.state.limiter.enabled = False
