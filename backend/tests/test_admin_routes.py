@@ -3,6 +3,8 @@ import pytest
 from fastapi.testclient import TestClient
 from app.main import app
 from app.services.auth_service import create_access_token
+from bson import ObjectId
+from datetime import datetime, timezone
 
 client = TestClient(app)
 
@@ -160,7 +162,7 @@ def test_admin_users_list_con_token_no_admin():
 
 
 def test_admin_users_list_con_token_admin(monkeypatch):
-    async def mock_listar_usuarios_admin(skip=0, limit=50, filtro_activo=None, filtro_admin=None, sort_by=None, order=-1):
+    async def mock_listar_usuarios_admin(skip=0, limit=50, filtro_activo=None, filtro_admin=None, filtro_busqueda=None, sort_by=None, order=-1):
         return [
             {"email": "user1@test.com", "is_admin": False, "is_active": True, "creado_en": "2024-01-01T00:00:00"},
             {"email": "admin@test.com", "is_admin": True, "is_active": True, "creado_en": "2024-01-01T00:00:00"},
@@ -179,7 +181,7 @@ def test_admin_users_list_con_token_admin(monkeypatch):
 
 
 def test_admin_users_list_con_filtros(monkeypatch):
-    async def mock_listar(skip=0, limit=50, filtro_activo=None, filtro_admin=None, sort_by=None, order=-1):
+    async def mock_listar(skip=0, limit=50, filtro_activo=None, filtro_admin=None, filtro_busqueda=None, sort_by=None, order=-1):
         assert filtro_activo is True
         assert filtro_admin is False
         return [{"email": "user1@test.com", "is_admin": False, "is_active": True, "creado_en": "2024-01-01T00:00:00"}], 1
@@ -208,6 +210,10 @@ def test_admin_users_patch_admin(monkeypatch):
     async def mock_toggle(email, activo):
         return True
 
+    async def mock_obtener(email):
+        return {"email": email, "is_admin": False, "is_active": True}
+
+    monkeypatch.setattr("app.routers.admin_routes.obtener_usuario_por_email_admin", mock_obtener)
     monkeypatch.setattr("app.routers.admin_routes.toggle_usuario_activo", mock_toggle)
     monkeypatch.setattr("app.routers.admin_routes.toggle_usuario_admin", lambda email, admin: True)
 
@@ -229,6 +235,10 @@ def test_admin_users_patch_admin_plan(monkeypatch):
         return MockUpdateResult()
     monkeypatch.setattr("app.routers.admin_routes.actualizar_plan_usuario", mock_actualizar)
 
+    async def mock_obtener(email):
+        return {"email": email, "is_admin": False, "is_active": True}
+    monkeypatch.setattr("app.routers.admin_routes.obtener_usuario_por_email_admin", mock_obtener)
+
     token = create_access_token({"sub": "admin@test.com", "is_admin": True, "is_active": True})
     response = client.patch("/api/admin/users/test@test.com", json={"plan": {"tipo_plan": "premium"}}, headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
@@ -243,7 +253,7 @@ def test_admin_recipes_list_sin_token():
 
 def test_admin_recipes_list_admin(monkeypatch):
     class MockRecetasCollection:
-        def find(self, query):
+        def find(self, query, projection=None):
             class Cursor:
                 def sort(self, *args):
                     return self
@@ -271,7 +281,7 @@ def test_admin_recipes_list_admin(monkeypatch):
 
 def test_admin_recipes_list_con_filtro_imagen(monkeypatch):
     class MockRecetasCollection:
-        def find(self, query):
+        def find(self, query, projection=None):
             class Cursor:
                 def sort(self, *args):
                     return self
@@ -293,3 +303,84 @@ def test_admin_recipes_list_con_filtro_imagen(monkeypatch):
     assert response.status_code == 200
     data = response.json()
     assert data["total"] == 1
+
+
+def test_admin_recipes_serializa_objectid_real(monkeypatch):
+    class MockRecetasCollection:
+        def find(self, query, projection=None):
+            assert projection == {"embedding": 0}
+            class Cursor:
+                def sort(self, *args):
+                    return self
+                def skip(self, *args):
+                    return self
+                def limit(self, *args):
+                    return self
+                async def to_list(self, length):
+                    return [{
+                        "_id": ObjectId("507f1f77bcf86cd799439011"),
+                        "texto_receta": "Test ObjectId",
+                        "imagen_id": None,
+                        "fecha": datetime.now(timezone.utc)
+                    }]
+            return Cursor()
+
+        async def count_documents(self, query):
+            return 1
+
+    monkeypatch.setattr("app.routers.admin_routes.recetas_collection", MockRecetasCollection())
+
+    token = create_access_token({"sub": "admin@test.com", "is_admin": True, "is_active": True})
+    response = client.get("/api/admin/recipes", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data["recetas"][0]["_id"], str)
+    assert isinstance(data["recetas"][0]["fecha"], str)
+
+
+def test_admin_users_patch_inexistente_devuelve_404(monkeypatch):
+    async def mock_obtener(email):
+        return None
+
+    monkeypatch.setattr("app.routers.admin_routes.obtener_usuario_por_email_admin", mock_obtener)
+
+    token = create_access_token({"sub": "admin@test.com", "is_admin": True, "is_active": True})
+    response = client.patch("/api/admin/users/nadie@test.com", json={"is_active": False}, headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 404
+    assert response.json()["error"] == "Usuario no encontrado"
+
+
+def test_admin_users_patch_self_lockout(monkeypatch):
+    async def mock_obtener(email):
+        return {"email": email, "is_admin": True, "is_active": True}
+
+    monkeypatch.setattr("app.routers.admin_routes.obtener_usuario_por_email_admin", mock_obtener)
+
+    token = create_access_token({"sub": "admin@test.com", "is_admin": True, "is_active": True})
+    response = client.patch("/api/admin/users/admin@test.com", json={"is_admin": False}, headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 400
+
+    response = client.patch("/api/admin/users/admin@test.com", json={"is_active": False}, headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 400
+
+
+def test_admin_users_list_con_busqueda(monkeypatch):
+    async def mock_listar(skip=0, limit=50, filtro_activo=None, filtro_admin=None, filtro_busqueda=None, sort_by=None, order=-1):
+        assert filtro_busqueda == "test"
+        return [{"email": "test@test.com", "is_admin": False, "is_active": True, "creado_en": "2024-01-01T00:00:00"}], 1
+
+    monkeypatch.setattr("app.routers.admin_routes.listar_usuarios_admin", mock_listar)
+
+    token = create_access_token({"sub": "admin@test.com", "is_admin": True, "is_active": True})
+    response = client.get("/api/admin/users?search=test", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total"] == 1
+
+
+def test_read_user_devuelve_is_admin():
+    token = create_access_token({"sub": "admin@test.com", "is_admin": True, "is_active": True})
+    response = client.get("/api/read", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["is_admin"] is True

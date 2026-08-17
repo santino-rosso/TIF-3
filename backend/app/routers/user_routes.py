@@ -48,6 +48,7 @@ async def login_user(usuario: OAuth2PasswordRequestForm = Depends()):
 async def read_user(current_user: dict = Depends(get_current_user)):
     return {
         "email": current_user["email"],
+        "is_admin": current_user.get("is_admin", False),
     }
 
 # Actualizar contraseña

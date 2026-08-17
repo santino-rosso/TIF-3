@@ -3,6 +3,7 @@ import Home from "./pages/Home";
 import Resultados from "./pages/Resultados";
 import Login from "./pages/Login";
 import PrivateRoute from "./components/PrivateRoute";
+import AdminRoute from "./components/AdminRoute";
 import Register from "./pages/Register";
 import Favoritos from "./pages/Favoritos";
 import Perfil from "./pages/Perfil";
@@ -28,11 +29,13 @@ function App() {
         <Route path="/recomendaciones" element={<Recomendaciones />} />
         <Route path="/planes" element={<Planes />} />
       </Route>
-      <Route element={<AdminLayout />}>
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/recipes" element={<AdminRecipes />} />
-        <Route path="/admin/stats" element={<AdminStats />} />
-        <Route path="/admin/users" element={<AdminUsers />} />
+      <Route element={<AdminRoute />}>
+        <Route element={<AdminLayout />}>
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/recipes" element={<AdminRecipes />} />
+          <Route path="/admin/stats" element={<AdminStats />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+        </Route>
       </Route>
     </Routes>
   );

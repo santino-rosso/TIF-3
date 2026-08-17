@@ -23,7 +23,7 @@ export function StatsPanel({ usuarios, usuariosSerie, generacionesSerie, planDis
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Total Usuarios"
-          value={usuarios.total_usuarios || 0}
+          value={usuarios.total || 0}
           icon={Users}
           trend={`+${usuarios.nuevos_30_dias || 0} este mes`}
           color="bg-blue-500"
@@ -32,7 +32,7 @@ export function StatsPanel({ usuarios, usuariosSerie, generacionesSerie, planDis
           title="Usuarios Activos"
           value={usuarios.activos || 0}
           icon={Users}
-          trend={`${Math.round((usuarios.activos / (usuarios.total_usuarios || 1)) * 100)}%`}
+          trend={`${Math.round((usuarios.activos / (usuarios.total || 1)) * 100)}%`}
           color="bg-green-500"
         />
         <StatCard

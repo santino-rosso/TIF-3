@@ -15,11 +15,34 @@ from app.db.plan_repository import crear_plan_usuario
 from app.models.plan_model import TipoPlan
 from app.models.usuario_model import UserAdminUpdate
 from app.db.receta_repository import recetas_collection
-from app.db.mongo_client import generaciones_collection, usuarios_collection
+from app.db.mongo_client import generaciones_collection, usuarios_collection, gridfs_bucket
+from app.utils.receta_serializer import serializar_receta
 from datetime import datetime, timezone, timedelta
 from bson import ObjectId
 
 router = APIRouter()
+
+
+def serializar_usuario_admin(usuario):
+    usuario_serializado = usuario.copy()
+
+    if "_id" in usuario_serializado and usuario_serializado["_id"] is not None:
+        usuario_serializado["_id"] = str(usuario_serializado["_id"])
+
+    if "creado_en" in usuario_serializado and hasattr(usuario_serializado["creado_en"], "isoformat"):
+        usuario_serializado["creado_en"] = usuario_serializado["creado_en"].isoformat()
+
+    plan = usuario_serializado.get("plan")
+    if isinstance(plan, dict):
+        for campo in ("fecha_inicio_periodo", "fecha_fin_periodo"):
+            if campo in plan and hasattr(plan[campo], "isoformat"):
+                plan[campo] = plan[campo].isoformat()
+
+    favoritos = usuario_serializado.get("favoritos")
+    if isinstance(favoritos, list):
+        usuario_serializado["favoritos"] = [str(f) if isinstance(f, ObjectId) else f for f in favoritos]
+
+    return usuario_serializado
 
 # Estadísticas globales para dashboard admin
 @router.get("/stats")
@@ -35,12 +58,12 @@ async def obtener_stats_admin(current_user: dict = Depends(require_admin)):
         # Generaciones últimos 30 días
         hace_30 = datetime.now(timezone.utc) - timedelta(days=30)
         pipeline_gen = [
-            {"$match": {"fecha": {"$gte": hace_30}}},
+            {"$match": {"fecha_generacion": {"$gte": hace_30}}},
             {"$group": {
-                "_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$fecha"}},
+                "_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$fecha_generacion"}},
                 "total": {"$sum": 1},
-                "exitosas": {"$sum": {"$cond": [{"$eq": ["$exito", True]}, 1, 0]}},
-                "fallidas": {"$sum": {"$cond": [{"$eq": ["$exito", False]}, 1, 0]}}
+                "exitosas": {"$sum": {"$cond": [{"$ne": ["$receta_id", None]}, 1, 0]}},
+                "fallidas": {"$sum": {"$cond": [{"$eq": ["$receta_id", None]}, 1, 0]}}
             }},
             {"$sort": {"_id": 1}}
         ]
@@ -86,7 +109,8 @@ async def obtener_stats_admin(current_user: dict = Depends(require_admin)):
             }
         }
     except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+        print(f"Error al cargar estadísticas: {e}")
+        return JSONResponse(content={"error": "Error al cargar estadísticas"}, status_code=500)
 
 
 # Lista usuarios con paginación, filtros y ordenamiento
@@ -96,14 +120,15 @@ async def listar_usuarios(
     limit: int = Query(50, ge=1, le=100),
     activo: bool | None = Query(None),
     admin: bool | None = Query(None),
+    search: Optional[str] = Query(None, max_length=100),
     sort_by: str | None = Query(None),
     order: int = Query(-1),
     current_user: dict = Depends(require_admin)
 ):
     usuarios, total = await listar_usuarios_admin(skip=skip, limit=limit, filtro_activo=activo, filtro_admin=admin,
-                                                  sort_by=sort_by, order=order)
+                                                  filtro_busqueda=search, sort_by=sort_by, order=order)
     return {
-        "usuarios": usuarios,
+        "usuarios": [serializar_usuario_admin(u) for u in usuarios],
         "total": total,
         "skip": skip,
         "limit": limit
@@ -116,7 +141,7 @@ async def obtener_usuario(email: str, current_user: dict = Depends(require_admin
     usuario = await obtener_usuario_por_email_admin(email)
     if not usuario:
         return JSONResponse(content={"error": "Usuario no encontrado"}, status_code=404)
-    return usuario
+    return serializar_usuario_admin(usuario)
 
 
 # Actualizar campos de un usuario (is_active, is_admin, plan)
@@ -126,6 +151,13 @@ async def actualizar_usuario(
     datos: UserAdminUpdate,
     current_user: dict = Depends(require_admin)
 ):
+    usuario = await obtener_usuario_por_email_admin(email)
+    if not usuario:
+        return JSONResponse(content={"error": "Usuario no encontrado"}, status_code=404)
+
+    if (datos.is_admin is False or datos.is_active is False) and email == current_user["email"]:
+        return JSONResponse(content={"error": "No puedes quitarte permisos de administrador a ti mismo"}, status_code=400)
+
     resultados = {}
 
     if datos.is_active is not None:
@@ -172,12 +204,14 @@ async def listar_recetas_admin(
     sort_field = sort if sort in ("fecha",) else "fecha"
     sort_order = 1 if order == "asc" else -1
 
-    cursor = recetas_collection.find(query).sort(sort_field, sort_order).skip(skip).limit(limit)
+    cursor = recetas_collection.find(query, {"embedding": 0}).sort(sort_field, sort_order).skip(skip).limit(limit)
     recetas = await cursor.to_list(length=limit)
     total = await recetas_collection.count_documents(query)
 
+    recetas_serializadas = [serializar_receta(r) for r in recetas]
+
     return {
-        "recetas": recetas,
+        "recetas": recetas_serializadas,
         "total": total,
         "skip": skip,
         "limit": limit
@@ -192,6 +226,16 @@ async def eliminar_receta(recipe_id: str, current_user: dict = Depends(require_a
     except Exception:
         return JSONResponse(content={"error": "ID de receta inválido"}, status_code=400)
 
+    receta = await recetas_collection.find_one({"_id": obj_id})
+    if receta:
+        imagen_id = receta.get("imagen_id")
+        if imagen_id is not None:
+            try:
+                await gridfs_bucket.delete(ObjectId(imagen_id))
+            except Exception:
+                # Si la imagen ya no existe en GridFS, no debe fallar el delete del doc
+                pass
+
     result = await recetas_collection.delete_one({"_id": obj_id})
     if result.deleted_count == 0:
         return JSONResponse(content={"error": "Receta no encontrada"}, status_code=404)
@@ -205,11 +249,21 @@ async def listar_generaciones(
     limit: int = Query(50, ge=1, le=100),
     current_user: dict = Depends(require_admin)
 ):
-    cursor = generaciones_collection.find().sort("fecha", -1).skip(skip).limit(limit)
+    cursor = generaciones_collection.find().sort("fecha_generacion", -1).skip(skip).limit(limit)
     generaciones = await cursor.to_list(length=limit)
     total = await generaciones_collection.count_documents({})
+
+    generaciones_serializadas = []
+    for generacion in generaciones:
+        generacion = generacion.copy()
+        if "_id" in generacion and generacion["_id"] is not None:
+            generacion["_id"] = str(generacion["_id"])
+        if "fecha_generacion" in generacion and hasattr(generacion["fecha_generacion"], "isoformat"):
+            generacion["fecha_generacion"] = generacion["fecha_generacion"].isoformat()
+        generaciones_serializadas.append(generacion)
+
     return {
-        "generaciones": generaciones,
+        "generaciones": generaciones_serializadas,
         "total": total,
         "skip": skip,
         "limit": limit

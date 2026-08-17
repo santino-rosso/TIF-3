@@ -244,6 +244,12 @@ export default function AdminUsers() {
         </div>
       </div>
 
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 mb-4">
+          <p className="text-sm">{error}</p>
+        </div>
+      )}
+
       {loading ? (
         <div className="animate-pulse space-y-4">
           {[...Array(5)].map((_, i) => (

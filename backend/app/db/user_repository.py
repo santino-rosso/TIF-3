@@ -5,6 +5,7 @@ from app.db.mongo_client import recetas_collection
 from app.models.plan_model import PlanUsuario, TipoPlan
 from app.db.plan_repository import crear_plan_usuario, normalizar_datetime_utc, obtener_generaciones_periodo_actual
 from datetime import datetime, timezone, timedelta
+import re
 
 async def get_user_by_email(email: str) -> Optional[dict]:
     return await usuarios_collection.find_one({"email": email})
@@ -143,14 +144,16 @@ async def liberar_generacion_plan(email: str, plan_usuario: PlanUsuario) -> None
 # ===== ADMIN FUNCTIONS =====
 
 async def listar_usuarios_admin(skip: int = 0, limit: int = 50, filtro_activo: Optional[bool] = None, filtro_admin: Optional[bool] = None,
-                                 sort_by: Optional[str] = None, order: int = -1):
+                                 filtro_busqueda: Optional[str] = None, sort_by: Optional[str] = None, order: int = -1):
     query = {}
     if filtro_activo is not None:
         query["is_active"] = filtro_activo
     if filtro_admin is not None:
         query["is_admin"] = filtro_admin
+    if filtro_busqueda:
+        query["email"] = {"$regex": re.escape(filtro_busqueda), "$options": "i"}
 
-    sort_field = sort_by if sort_by else "creado_en"
+    sort_field = sort_by if sort_by in ("email", "creado_en") else "creado_en"
     sort_order = order if order in (1, -1) else -1
 
     cursor = usuarios_collection.find(query, {"hashed_password": 0}).sort(sort_field, sort_order).skip(skip).limit(limit)
