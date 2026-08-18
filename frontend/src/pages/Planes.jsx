@@ -252,7 +252,7 @@ const Planes = () => {
               className={`bg-white rounded-xl shadow-lg overflow-hidden border-2 transition-all duration-300 hover:shadow-xl ${
                 estadisticas?.tipo_plan === plan.tipo 
                   ? (plan.tipo === "premium" 
-                      ? "border-yellow-500" 
+                      ? "border-yellow-500 ring-2 ring-yellow-200" 
                       : "border-green-500 ring-2 ring-green-200")
                   : (plan.tipo === "premium" ? "border-yellow-300 hover:border-yellow-400" : "border-green-300 hover:border-green-400")
               }`}
@@ -267,35 +267,23 @@ const Planes = () => {
                 </div>
               </div>
               
-              <div className="p-6">
+              <div className="p-6 flex flex-col">
                 <p className="text-gray-600 mb-4">{plan.descripcion}</p>
                 
-                <div className="space-y-3 mb-6 min-h-[204px]">
-<div className="flex items-center gap-2">
-                      <CheckCircle className={`w-5 h-5 ${plan.tipo === "premium" ? "text-yellow-500" : "text-green-500"}`} />
-                      <span className="text-gray-700">Recetas personalizadas con IA</span>
-                    </div>
-<div className="flex items-center gap-2">
-                      <CheckCircle className={`w-5 h-5 ${plan.tipo === "premium" ? "text-yellow-500" : "text-green-500"}`} />
-                      <span className="text-gray-700">Imágenes generadas automáticamente</span>
-                    </div>
-<div className="flex items-center gap-2">
-                      <CheckCircle className={`w-5 h-5 ${plan.tipo === "premium" ? "text-yellow-500" : "text-green-500"}`} />
-                      <span className="text-gray-700">Recetas sin límites diarios</span>
-                    </div>
-                  {plan.tipo === "premium" && (
-                    <>
+<div className="space-y-3 mb-6 flex-1">
                       <div className="flex items-center gap-2">
                         <CheckCircle className={`w-5 h-5 ${plan.tipo === "premium" ? "text-yellow-500" : "text-green-500"}`} />
-                        <span className="text-gray-700">Soporte prioritario</span>
+                        <span className="text-gray-700">Recetas personalizadas con IA</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className={`w-5 h-5 ${plan.tipo === "premium" ? "text-yellow-500" : "text-green-500"}`} />
+                        <span className="text-gray-700">Imágenes generadas automáticamente</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <CheckCircle className={`w-5 h-5 ${plan.tipo === "premium" ? "text-yellow-500" : "text-green-500"}`} />
                         <span className="text-gray-700">Modo cocina interactivo</span>
                       </div>
-                    </> 
-                  )}
-                </div>
+                    </div>
                 
                 {estadisticas?.tipo_plan === plan.tipo ? (
                   <div className={`flex items-center justify-center gap-2 py-3 px-6 rounded-lg font-semibold ${
@@ -306,12 +294,20 @@ const Planes = () => {
                   </div>
                 ) : (
                   <button
-                    onClick={() => plan.tipo === "premium" && estadisticas?.tipo_plan !== plan.tipo ? openPaymentModal(plan.tipo) : actualizarPlan(plan.tipo)}
+onClick={() => {
+                      if (plan.tipo === "premium") {
+                        openPaymentModal(plan.tipo);
+                      } else {
+                        if (window.confirm("¿Estás seguro de cambiar al plan gratuito? Perderás las ventajas de premium.")) {
+                          actualizarPlan(plan.tipo);
+                        }
+                      }
+                    }}
                     disabled={actualizando}
                     className={`w-full py-3 px-6 rounded-lg font-semibold transition-colors shadow flex items-center justify-center gap-2 ${
                       plan.tipo === "premium"
-                        ? "bg-yellow-500 hover:bg-yellow-600 text-white hover:text-white"
-                        : "bg-green-500 hover:bg-green-600 text-white hover:text-white"
+                        ? "bg-yellow-500 hover:bg-yellow-600 text-white"
+                        : "bg-green-500 hover:bg-green-600 text-white"
                     } ${actualizando ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     {actualizando ? (
