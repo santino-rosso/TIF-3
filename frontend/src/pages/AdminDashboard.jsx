@@ -23,6 +23,12 @@ export default function AdminDashboard() {
     fetchStats();
   }, []);
 
+  useEffect(() => {
+    if (!error) return;
+    const t = setTimeout(() => setError(null), 5000);
+    return () => clearTimeout(t);
+  }, [error]);
+
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -36,14 +42,12 @@ export default function AdminDashboard() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="text-center py-12">
-        <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-        <p className="text-gray-600">{error}</p>
-      </div>
-    );
-  }
+  const errorBanner = error && (
+    <div className="mb-6 flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+      <AlertTriangle className="w-4 h-4 shrink-0" />
+      <p className="text-sm">{error}</p>
+    </div>
+  );
 
   const u = stats?.usuarios || {};
   const r = stats?.recetas || {};
@@ -68,6 +72,7 @@ export default function AdminDashboard() {
 
   return (
     <div>
+      {errorBanner}
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Panel de Administración</h1>
       <StatsPanel
         usuarios={u}

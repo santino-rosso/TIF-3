@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { createPortal } from "react-dom";
 import {
   useReactTable,
   getCoreRowModel,
@@ -10,6 +11,7 @@ import {
 } from "@tanstack/react-table";
 import { Search, ChevronUp, ChevronDown } from "lucide-react";
 import api from "../utils/axiosInstance";
+import { formatearReceta } from "../utils/recipeFormatter";
 
 const columnHelper = createColumnHelper();
 
@@ -50,20 +52,21 @@ export default function AdminRecipes() {
     }
   };
 
+  const fetchTotalRecetas = async () => {
+    try {
+      const res = await api.get("/admin/stats");
+      setTotalRecetas(res.data?.recetas?.total || 0);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     fetchRecipes();
   }, [pagination, sorting, globalFilter, conImagen]);
 
   useEffect(() => {
-    const fetchTotal = async () => {
-      try {
-        const res = await api.get("/admin/stats");
-        setTotalRecetas(res.data?.recetas?.total || 0);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchTotal();
+    fetchTotalRecetas();
   }, []);
 
   const columns = useMemo(
@@ -88,11 +91,19 @@ export default function AdminRecipes() {
       {
         accessorKey: "texto_receta",
         header: "Receta",
-        cell: (info) => (
-          <div className="max-w-xs truncate font-medium text-gray-900">
-            {info.getValue().substring(0, 80)}...
-          </div>
-        ),
+        cell: (info) => {
+          const texto = info.getValue() || "";
+          const sinPrefijo = texto
+            .replace(/^\*{0,2}\s*nombre de la receta\s*\*{0,2}\s*:?\s*/i, "")
+            .replace(/\*\*/g, "")
+            .trim();
+          const titulo = sinPrefijo.split("\n")[0];
+          return (
+            <div className="w-80 font-medium text-gray-900">
+              {titulo}
+            </div>
+          );
+        },
       },
       {
         accessorKey: "fecha",
@@ -127,7 +138,10 @@ export default function AdminRecipes() {
                     if (confirm("¿Eliminar esta receta?")) {
                       api
                         .delete(`/admin/recipes/${recipe._id}`)
-                        .then(fetchRecipes)
+                        .then(() => {
+                          fetchRecipes();
+                          fetchTotalRecetas();
+                        })
                         .catch(() => setError("No se pudo eliminar la receta"));
                     }
                   }}
@@ -286,37 +300,38 @@ export default function AdminRecipes() {
         </div>
       )}
 
-      {verReceta && (
-        <div
-          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
-          onClick={() => setVerReceta(null)}
-        >
+      {verReceta &&
+        createPortal(
           <div
-            className="bg-white rounded-xl p-6 shadow-lg max-w-2xl w-full max-h-[85vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
+            onClick={() => setVerReceta(null)}
           >
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              {verReceta.titulo || "Receta"}
-            </h3>
-            {verReceta.imagen_id && (
-              <img
-                src={`${import.meta.env.VITE_API_URL}/imagenes/${verReceta.imagen_id}`}
-                alt={verReceta.titulo || "Receta"}
-                className="w-full max-h-72 object-cover rounded-lg mb-4"
-              />
-            )}
-            <p className="text-sm text-gray-700 whitespace-pre-wrap">{verReceta.texto_receta}</p>
-            <div className="flex justify-end mt-6">
-              <button
-                onClick={() => setVerReceta(null)}
-                className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                Cerrar
-              </button>
+            <div
+              className="bg-white rounded-xl p-6 shadow-lg max-w-2xl w-full max-h-[85vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {verReceta.imagen_id && (
+                <img
+                  src={`${import.meta.env.VITE_API_URL}/imagenes/${verReceta.imagen_id}`}
+                  alt={verReceta.titulo || "Receta"}
+                  className="w-full max-h-72 object-cover rounded-lg mb-4"
+                />
+              )}
+              <div className="text-sm text-gray-700">
+                {formatearReceta(verReceta.texto_receta)}
+              </div>
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={() => setVerReceta(null)}
+                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+                >
+                  Cerrar
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

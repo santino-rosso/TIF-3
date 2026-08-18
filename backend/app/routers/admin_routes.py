@@ -9,7 +9,8 @@ from app.db.user_repository import (
     toggle_usuario_activo,
     toggle_usuario_admin,
     actualizar_plan_usuario,
-    obtener_stats_globales
+    obtener_stats_globales,
+    delete_user_by_email
 )
 from app.db.plan_repository import crear_plan_usuario
 from app.models.plan_model import TipoPlan
@@ -178,6 +179,22 @@ async def actualizar_usuario(
         return JSONResponse(content={"error": "No se proporcionaron campos válidos"}, status_code=400)
 
     return {"actualizado": resultados}
+
+
+# Eliminar un usuario
+@router.delete("/users/{email}")
+async def eliminar_usuario(email: str, current_user: dict = Depends(require_admin)):
+    if email == current_user["email"]:
+        return JSONResponse(content={"error": "No puedes eliminar tu propia cuenta"}, status_code=400)
+
+    usuario = await obtener_usuario_por_email_admin(email)
+    if not usuario:
+        return JSONResponse(content={"error": "Usuario no encontrado"}, status_code=404)
+
+    result = await delete_user_by_email(email)
+    if result.deleted_count == 1:
+        return {"mensaje": "Usuario eliminado exitosamente"}
+    return JSONResponse(content={"error": "No se pudo eliminar el usuario"}, status_code=400)
 
 
 # Lista recetas con paginación y filtros

@@ -51,20 +51,21 @@ export default function AdminUsers() {
     }
   };
 
+  const fetchTotalUsuarios = async () => {
+    try {
+      const res = await api.get("/admin/stats");
+      setTotalUsuarios(res.data?.usuarios?.total || 0);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
   }, [pagination, sorting, filters, globalFilter]);
 
   useEffect(() => {
-    const fetchTotal = async () => {
-      try {
-        const res = await api.get("/admin/stats");
-        setTotalUsuarios(res.data?.usuarios?.total || 0);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchTotal();
+    fetchTotalUsuarios();
   }, []);
 
   const columns = useMemo(
@@ -133,15 +134,35 @@ export default function AdminUsers() {
               <button
                 onClick={() => {
                   if (!window.confirm("¿Estás seguro de desactivar este usuario?")) return;
-                  api.patch(`/admin/users/${row.email}`, { is_active: !row.is_active }).then(fetchUsers);
+                  api.patch(`/admin/users/${row.email}`, { is_active: !row.is_active }).then(() => {
+                    fetchUsers();
+                    fetchTotalUsuarios();
+                  });
                 }}
                 className={`${
                   row.is_active
-                    ? "bg-red-500 hover:bg-red-600"
+                    ? "bg-gray-400 hover:bg-gray-500"
                     : "bg-green-500 hover:bg-green-600"
                 } text-white px-2.5 py-1.5 rounded text-xs font-medium transition-colors`}
               >
                 {row.is_active ? "Desactivar" : "Activar"}
+              </button>
+              <button
+                onClick={() => {
+                  if (!window.confirm(`¿Estás seguro de eliminar a ${row.email}?`)) return;
+                  api
+                    .delete(`/admin/users/${row.email}`)
+                    .then(() => {
+                      fetchUsers();
+                      fetchTotalUsuarios();
+                    })
+                    .catch((err) => {
+                      setError(err.response?.data?.error || "No se pudo eliminar el usuario");
+                    });
+                }}
+                className="bg-red-500 hover:bg-red-600 text-white px-2.5 py-1.5 rounded text-xs font-medium transition-colors"
+              >
+                Eliminar
               </button>
             </div>
           );
@@ -330,6 +351,7 @@ export default function AdminUsers() {
                   await api.patch(`/admin/users/${editing}`, { plan: { tipo_plan: editData.plan || "gratuito" } });
                   setEditing(null);
                   fetchUsers();
+                  fetchTotalUsuarios();
                 }}
                 className="px-4 py-2 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
               >
