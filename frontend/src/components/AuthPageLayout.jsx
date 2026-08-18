@@ -4,8 +4,8 @@ const AuthPageLayout = ({ children }) => {
       <div className="w-full max-w-md">
         <div className="text-center mb-6">
           <img
-            src="/Reseya.png"
-            alt="ReseYa Logo"
+            src="/ReceYa.png"
+            alt="ReceYa Logo"
             className="mx-auto w-48 h-auto"
           />
         </div>

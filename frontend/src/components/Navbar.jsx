@@ -22,8 +22,8 @@ const Navbar = () => {
             className="text-lg sm:text-xl font-bold hover:text-gray-600 transition-colors flex items-center"
           >
             <img 
-              src="/Reseya.png" 
-              alt="ReseYa Logo" 
+              src="/ReceYa.png" 
+              alt="ReceYa Logo" 
               className="h-12 sm:h-14 w-auto"
             />
           </a>

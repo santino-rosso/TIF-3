@@ -10,7 +10,7 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}']
       },
-      includeAssets: ['Reseya.png'],
+      includeAssets: ['ReceYaGorro.png'],
       manifest: {
         name: 'ReceYa',
         short_name: 'ReceYa',
@@ -21,7 +21,7 @@ export default defineConfig({
         theme_color: '#10b981',
         icons: [
           {
-            src: 'Reseya.png',
+            src: 'ReceYaGorro.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any maskable'

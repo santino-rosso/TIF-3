@@ -10,7 +10,7 @@ describe('AuthPageLayout', () => {
       </AuthPageLayout>
     );
 
-    expect(screen.getByAltText('ReseYa Logo')).toHaveAttribute('src', '/Reseya.png');
+    expect(screen.getByAltText('ReceYa Logo')).toHaveAttribute('src', '/ReceYa.png');
     expect(screen.getByRole('heading', { name: 'Auth content' })).toBeInTheDocument();
   });
 });

@@ -47,7 +47,7 @@ export const useCookingTimer = ({ speak, currentStep }) => {
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification('⏰ ¡Tiempo terminado!', {
         body: `Paso ${currentStep + 1} completado`,
-        icon: '/Reseya.png',
+        icon: '/ReceYa.png',
         vibrate: [200, 100, 200]
       });
     }

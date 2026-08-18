@@ -103,7 +103,7 @@ describe('useCookingTimer', () => {
 
     expect(NotificationMock).toHaveBeenCalledWith(
       '⏰ ¡Tiempo terminado!',
-      expect.objectContaining({ body: 'Paso 4 completado', icon: '/Reseya.png' })
+      expect.objectContaining({ body: 'Paso 4 completado', icon: '/ReceYa.png' })
     );
     expect(vibrateMock).toHaveBeenCalledWith([200, 100, 200, 100, 200]);
     expect(speak).toHaveBeenCalledWith('Tiempo terminado');

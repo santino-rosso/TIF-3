@@ -7,6 +7,6 @@ describe('EmptyState', () => {
     render(<EmptyState message="No hay contenido disponible." imageAlt="Sin contenido" />);
 
     expect(screen.getByText('No hay contenido disponible.')).toBeInTheDocument();
-    expect(screen.getByAltText('Sin contenido')).toHaveAttribute('src', '/Reseya.png');
+    expect(screen.getByAltText('Sin contenido')).toHaveAttribute('src', '/ReceYa.png');
   });
 });

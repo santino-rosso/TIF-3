@@ -16,8 +16,8 @@ const AdminSidebar = () => {
       <div className="p-6 border-b border-gray-200">
         <button onClick={() => navigate("/admin")} className="cursor-pointer" aria-label="Ir al panel de administración">
           <img
-            src="/Reseya.png"
-            alt="ReseYa Logo"
+            src="/ReceYa.png"
+            alt="ReceYa Logo"
             className="h-12 sm:h-14 w-auto"
           />
         </button>

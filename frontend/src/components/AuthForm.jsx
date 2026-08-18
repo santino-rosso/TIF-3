@@ -55,7 +55,7 @@ const AuthForm = ({
         <div className="pt-2">
           <button
             type="submit"
-            className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 sm:py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 transform hover:scale-[1.02] text-sm shadow-lg"
+            className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 sm:py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200 text-sm shadow-lg"
           >
             {submitLabel}
           </button>
@@ -67,7 +67,7 @@ const AuthForm = ({
           <p className="text-gray-600 text-sm mb-3">{alternativeLinkLabel}</p>
           <Link 
             to={alternativeLink} 
-            className="block w-full bg-gray-100 hover:bg-green-100 text-green-700 hover:text-green-700 font-semibold py-2.5 sm:py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 text-sm border border-gray-300 hover:border-green-300"
+            className="block w-full bg-gray-100 hover:bg-green-100 text-green-700 hover:text-green-700 font-semibold py-2.5 sm:py-3 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 text-sm border border-gray-300 hover:border-green-300"
           >
             {alternativeLinkText}
           </Link>
