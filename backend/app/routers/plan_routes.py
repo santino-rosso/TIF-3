@@ -1,19 +1,14 @@
 from fastapi import APIRouter, Depends, Body
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
 from typing import Optional
+from pydantic import ValidationError
 from app.services.auth_service import get_current_user
-from app.services.plan_service import obtener_todos_los_planes, obtener_estadisticas_usuario, puede_generar_receta, crear_plan_usuario
+from app.db.plan_repository import obtener_todos_los_planes, obtener_estadisticas_usuario, puede_generar_receta, crear_plan_usuario
 from app.db.user_repository import obtener_plan_usuario, actualizar_plan_usuario
 from app.models.plan_model import TipoPlan
+from app.models.payment_model import PaymentData
 
 router = APIRouter()
-
-class PaymentData(BaseModel):
-    card_number: str = Field(..., min_length=16, max_length=16)
-    exp_month: int = Field(..., ge=1, le=12)
-    exp_year: int = Field(..., ge=2024)
-    cvc: str = Field(..., min_length=3, max_length=3)
 
 @router.get("/planes")
 async def obtener_planes():
@@ -64,7 +59,7 @@ async def verificar_limite_generacion(current_user: dict = Depends(get_current_u
 async def actualizar_plan(
     tipo_plan: str,
     current_user: dict = Depends(get_current_user),
-    payment_data: Optional[PaymentData] = Body(None)
+    payment_data: Optional[dict] = Body(None)
 ):
     try:
         # Validar tipo de plan
@@ -75,16 +70,18 @@ async def actualizar_plan(
             )
 
         if tipo_plan == TipoPlan.PREMIUM.value:
-            # Require payment data for premium upgrade
             if not payment_data:
                 return JSONResponse(
                     content={"error": "Se requieren datos de tarjeta para actualizar a Premium"}, 
                     status_code=400
                 )
-            # Here you could integrate with a real payment gateway.
-            # For now we simulate a successful payment.
-            # You could add more validation (Luhn check, expiry date not in past, etc.)
-            pass
+            try:
+                PaymentData(**payment_data)
+            except ValidationError:
+                return JSONResponse(
+                    content={"error": "Datos de tarjeta inválidos"}, 
+                    status_code=400
+                )
         
         plan_tipo = TipoPlan(tipo_plan)
         

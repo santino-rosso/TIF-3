@@ -281,7 +281,7 @@ const Planes = () => {
                     </div>
 <div className="flex items-center gap-2">
                       <CheckCircle className={`w-5 h-5 ${plan.tipo === "premium" ? "text-yellow-500" : "text-green-500"}`} />
-                      <span className="text-gray-700">Modo cocina interactivo</span>
+                      <span className="text-gray-700">Recetas sin límites diarios</span>
                     </div>
                   {plan.tipo === "premium" && (
                     <>
@@ -291,9 +291,9 @@ const Planes = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         <CheckCircle className={`w-5 h-5 ${plan.tipo === "premium" ? "text-yellow-500" : "text-green-500"}`} />
-                        <span className="text-gray-700">Recetas sin límites diarios</span>
+                        <span className="text-gray-700">Modo cocina interactivo</span>
                       </div>
-                    </>
+                    </> 
                   )}
                 </div>
                 
