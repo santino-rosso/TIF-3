@@ -25,7 +25,9 @@ const Login = () => {
 
             localStorage.setItem("token", response.data.access_token);
             localStorage.setItem("token_refresh", response.data.refresh_token);
-            navigate("/"); 
+
+            const profile = await axiosInstance.get("/read");
+            navigate(profile.data.is_admin ? "/admin" : "/"); 
         } catch (err) {
             setError(err.response?.data?.detail || "Ocurrió un error al iniciar sesión.");
         }

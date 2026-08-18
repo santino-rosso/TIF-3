@@ -16,6 +16,7 @@ const columnHelper = createColumnHelper();
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
   const [total, setTotal] = useState(0);
+  const [totalUsuarios, setTotalUsuarios] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
@@ -54,6 +55,18 @@ export default function AdminUsers() {
     fetchUsers();
   }, [pagination, sorting, filters, globalFilter]);
 
+  useEffect(() => {
+    const fetchTotal = async () => {
+      try {
+        const res = await api.get("/admin/stats");
+        setTotalUsuarios(res.data?.usuarios?.total || 0);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchTotal();
+  }, []);
+
   const columns = useMemo(
     () => [
       columnHelper.accessor("email", {
@@ -78,8 +91,8 @@ export default function AdminUsers() {
             <span
               className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                 plan === "premium"
-                  ? "bg-purple-100 text-purple-800"
-                  : "bg-gray-100 text-gray-800"
+                  ? "text-yellow-600"
+                  : "text-gray-800"
               }`}
             >
               {plan?.charAt(0).toUpperCase() + plan?.slice(1) || "—"}
@@ -93,25 +106,11 @@ export default function AdminUsers() {
           <span
             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
               info.getValue()
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
+                ? "text-green-800"
+                : "text-red-800"
             }`}
           >
             {info.getValue() ? "Activo" : "Inactivo"}
-          </span>
-        ),
-      }),
-      columnHelper.accessor("is_admin", {
-        header: "Admin",
-        cell: (info) => (
-          <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-              info.getValue()
-                ? "bg-yellow-100 text-yellow-800"
-                : "bg-gray-100 text-gray-800"
-            }`}
-          >
-            {info.getValue() ? "Sí" : "No"}
           </span>
         ),
       }),
@@ -120,68 +119,36 @@ export default function AdminUsers() {
         header: "Acciones",
         cell: (info) => {
           const row = info.row.original;
-          const isEditing = editing === row.email;
           return (
             <div className="flex items-center gap-2">
-              {isEditing ? (
-                <>
-                  <select
-                    value={editData.plan || row.plan?.tipo_plan}
-                    onChange={(e) => setEditData({ ...editData, plan: e.target.value })}
-                    className="text-xs border border-gray-300 rounded px-2 py-1"
-                  >
-                    <option value="gratuito">Gratuito</option>
-                    <option value="premium">Premium</option>
-                  </select>
-                  <button
-                    onClick={() => {
-                      api.patch(`/admin/users/${row.email}`, { plan: { tipo_plan: editData.plan || row.plan?.tipo_plan } });
-                      setEditing(null);
-                      fetchUsers();
-                    }}
-                    className="text-xs text-green-600 hover:underline"
-                  >
-                    Guardar
-                  </button>
-                  <button
-                    onClick={() => setEditing(null)}
-                    className="text-xs text-gray-500 hover:underline"
-                  >
-                    Cancelar
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={() => setEditing(row.email)}
-                    className="text-xs text-blue-600 hover:underline"
-                  >
-                    Editar plan
-                  </button>
-                  <button
-                    onClick={() =>
-                      api.patch(`/admin/users/${row.email}`, { is_active: !row.is_active }).then(fetchUsers)
-                    }
-                    className={`text-xs ${row.is_active ? "text-red-600" : "text-green-600"} hover:underline`}
-                  >
-                    {row.is_active ? "Desactivar" : "Activar"}
-                  </button>
-                  <button
-                    onClick={() =>
-                      api.patch(`/admin/users/${row.email}`, { is_admin: !row.is_admin }).then(fetchUsers)
-                    }
-                    className={`text-xs ${row.is_admin ? "text-gray-600" : "text-purple-600"} hover:underline`}
-                  >
-                    {row.is_admin ? "Quitar admin" : "Hacer admin"}
-                  </button>
-                </>
-              )}
+              <button
+                onClick={() => {
+                  setEditing(row.email);
+                  setEditData({ plan: row.plan?.tipo_plan || "gratuito" });
+                }}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-2.5 py-1.5 rounded text-xs font-medium transition-colors"
+              >
+                Editar plan
+              </button>
+              <button
+                onClick={() => {
+                  if (!window.confirm("¿Estás seguro de desactivar este usuario?")) return;
+                  api.patch(`/admin/users/${row.email}`, { is_active: !row.is_active }).then(fetchUsers);
+                }}
+                className={`${
+                  row.is_active
+                    ? "bg-red-500 hover:bg-red-600"
+                    : "bg-green-500 hover:bg-green-600"
+                } text-white px-2.5 py-1.5 rounded text-xs font-medium transition-colors`}
+              >
+                {row.is_active ? "Desactivar" : "Activar"}
+              </button>
             </div>
           );
         },
       }),
     ],
-  [editing, editData]);
+  []);
 
   const table = useReactTable({
     data: users,
@@ -207,10 +174,10 @@ export default function AdminUsers() {
 
   return (
     <div className="space-y-6">
+      <h1 className="text-2xl font-bold text-gray-900">Gestión de Usuarios</h1>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Gestión de Usuarios</h1>
-          <p className="text-gray-500 mt-1">{total} usuarios totales</p>
+          <p className="text-gray-500">{totalUsuarios} usuarios totales</p>
         </div>
         <div className="flex items-center gap-4">
           <div className="relative">
@@ -261,7 +228,7 @@ export default function AdminUsers() {
         </div>
       ) : (
         <div>
-          <div className="rounded-lg border border-gray-200 overflow-hidden">
+          <div className="rounded-lg border border-gray-200 overflow-hidden bg-white">
             <table className="w-full">
               <thead className="bg-gray-50">
                 {table.getHeaderGroups().map((headerGroup) => (
@@ -288,7 +255,7 @@ export default function AdminUsers() {
               <tbody className="divide-y divide-gray-100">
                 {table.getRowModel().rows.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-12 text-center text-gray-500">
+                    <td colSpan={5} className="px-4 py-12 text-center text-gray-500">
                       No se encontraron usuarios
                     </td>
                   </tr>
@@ -325,6 +292,48 @@ export default function AdminUsers() {
                 className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
                 Siguiente
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editing && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+          onClick={() => setEditing(null)}
+        >
+          <div
+            className="bg-white rounded-xl p-6 shadow-lg w-96"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold text-gray-900">Editar plan</h3>
+            <p className="text-sm text-gray-500 mt-1 mb-4 break-all">{editing}</p>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Plan</label>
+            <select
+              value={editData.plan || "gratuito"}
+              onChange={(e) => setEditData({ ...editData, plan: e.target.value })}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-6"
+            >
+              <option value="gratuito">Gratuito</option>
+              <option value="premium">Premium</option>
+            </select>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setEditing(null)}
+                className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={async () => {
+                  await api.patch(`/admin/users/${editing}`, { plan: { tipo_plan: editData.plan || "gratuito" } });
+                  setEditing(null);
+                  fetchUsers();
+                }}
+                className="px-4 py-2 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+              >
+                Guardar
               </button>
             </div>
           </div>

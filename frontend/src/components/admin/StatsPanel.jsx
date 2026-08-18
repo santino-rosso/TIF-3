@@ -1,4 +1,4 @@
-import { Users, BookOpen as BookOpenIcon, TrendingUp, AlertTriangle } from "lucide-react";
+import { Users, BookOpen as BookOpenIcon, TrendingUp, AlertTriangle, Check } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -12,12 +12,24 @@ import {
   PieChart,
   Pie,
   Cell,
+  Legend,
 } from "recharts";
 import { StatCard } from "./StatCard";
 
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
 
+const formatFecha = (f) => {
+  if (!f) return f;
+  const match = String(f).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (match) return `${match[3]}-${match[2]}-${match[1]}`;
+  return f;
+};
+
 export function StatsPanel({ usuarios, usuariosSerie, generacionesSerie, planDistribution, recetas }) {
+  const nuevos30 = usuarios.nuevos_30_dias || 0;
+  const pctActivos = Math.round((usuarios.activos / (usuarios.total || 1)) * 100);
+  const fallidas30 = generacionesSerie.reduce((a, b) => a + (b.fallidas || 0), 0);
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -25,28 +37,32 @@ export function StatsPanel({ usuarios, usuariosSerie, generacionesSerie, planDis
           title="Total Usuarios"
           value={usuarios.total || 0}
           icon={Users}
-          trend={`+${usuarios.nuevos_30_dias || 0} este mes`}
+          trend={`${nuevos30 >= 0 ? "+" : ""}${nuevos30} este mes`}
+          trendTone={nuevos30 < 0 ? "bad" : "good"}
           color="bg-blue-500"
         />
         <StatCard
           title="Usuarios Activos"
           value={usuarios.activos || 0}
           icon={Users}
-          trend={`${Math.round((usuarios.activos / (usuarios.total || 1)) * 100)}%`}
+          trend={`${pctActivos}%`}
+          trendTone={pctActivos < 60 ? "bad" : "good"}
           color="bg-green-500"
         />
         <StatCard
           title="Total Recetas"
           value={recetas.total || 0}
           icon={BookOpenIcon}
-          trend={`${recetas.con_imagen || 0} con imagen`}
+          trend={`${recetas.sin_imagen || 0} sin imagen`}
+          trendTone={(recetas.sin_imagen || 0) > 0 ? "bad" : "neutral"}
           color="bg-purple-500"
         />
         <StatCard
           title="Generaciones (30d)"
           value={generacionesSerie.reduce((a, b) => a + b.total, 0) || 0}
           icon={TrendingUp}
-          trend={`${generacionesSerie.reduce((a, b) => a + b.exitosas, 0) || 0} exitosas`}
+          trend={`${fallidas30} con error`}
+          trendTone={fallidas30 > 0 ? "bad" : "neutral"}
           color="bg-orange-500"
         />
       </div>
@@ -58,9 +74,10 @@ export function StatsPanel({ usuarios, usuariosSerie, generacionesSerie, planDis
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={usuariosSerie}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="fecha" tick={{ fontSize: 12 }} stroke="#9ca3af" />
-                <YAxis tick={{ fontSize: 12 }} stroke="#9ca3af" />
+                <XAxis dataKey="fecha" tick={{ fontSize: 12 }} stroke="#9ca3af" tickFormatter={formatFecha} />
+                <YAxis tick={{ fontSize: 12 }} stroke="#9ca3af" allowDecimals={false} />
                 <Tooltip
+                  labelFormatter={formatFecha}
                   contentStyle={{
                     backgroundColor: "white",
                     border: "1px solid #e5e7eb",
@@ -121,7 +138,8 @@ export function StatsPanel({ usuarios, usuariosSerie, generacionesSerie, planDis
                   paddingAngle={2}
                   dataKey="value"
                   nameKey="name"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  labelLine={false}
+                  label={{ fill: "#fff", fontSize: 12, fontWeight: 600 }}
                 >
                   {planDistribution.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -135,6 +153,7 @@ export function StatsPanel({ usuarios, usuariosSerie, generacionesSerie, planDis
                     boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
                   }}
                 />
+                <Legend verticalAlign="bottom" iconType="circle" iconSize={10} wrapperStyle={{ fontSize: 13 }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -157,7 +176,7 @@ export function StatsPanel({ usuarios, usuariosSerie, generacionesSerie, planDis
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-green-100 rounded-lg">
-                  <TrendingUp className="w-5 h-5 text-green-600" />
+                  <Check className="w-5 h-5 text-green-600" />
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">Con imagen</p>
@@ -167,12 +186,12 @@ export function StatsPanel({ usuarios, usuariosSerie, generacionesSerie, planDis
             </div>
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-gray-100 rounded-lg">
-                  <AlertTriangle className="w-5 h-5 text-gray-600" />
+                <div className="p-2 bg-red-100 rounded-lg">
+                  <AlertTriangle className="w-5 h-5 text-red-600" />
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">Sin imagen</p>
-                  <p className="text-sm text-gray-500">{recetas.sin_imagen || 0}</p>
+                  <p className="text-sm text-red-600">{recetas.sin_imagen || 0}</p>
                 </div>
               </div>
             </div>

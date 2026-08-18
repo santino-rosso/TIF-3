@@ -67,12 +67,15 @@ export default function AdminDashboard() {
   }));
 
   return (
-    <StatsPanel
-      usuarios={u}
-      usuariosSerie={usersChartData}
-      generacionesSerie={generationsChartData}
-      planDistribution={planDistribution}
-      recetas={r}
-    />
+    <div>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Panel de Administración</h1>
+      <StatsPanel
+        usuarios={u}
+        usuariosSerie={usersChartData}
+        generacionesSerie={generationsChartData}
+        planDistribution={planDistribution}
+        recetas={r}
+      />
+    </div>
   );
 }

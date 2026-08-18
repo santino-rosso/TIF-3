@@ -8,7 +8,7 @@ import {
   flexRender,
   createColumnHelper,
 } from "@tanstack/react-table";
-import { Search, Image, Trash2, ChevronUp, ChevronDown } from "lucide-react";
+import { Search, ChevronUp, ChevronDown } from "lucide-react";
 import api from "../utils/axiosInstance";
 
 const columnHelper = createColumnHelper();
@@ -16,11 +16,13 @@ const columnHelper = createColumnHelper();
 export default function AdminRecipes() {
   const [recipes, setRecipes] = useState([]);
   const [total, setTotal] = useState(0);
+  const [totalRecetas, setTotalRecetas] = useState(0);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [conImagen, setConImagen] = useState(null);
+  const [verReceta, setVerReceta] = useState(null);
   const [error, setError] = useState(null);
 
   const fetchRecipes = async () => {
@@ -51,6 +53,18 @@ export default function AdminRecipes() {
   useEffect(() => {
     fetchRecipes();
   }, [pagination, sorting, globalFilter, conImagen]);
+
+  useEffect(() => {
+    const fetchTotal = async () => {
+      try {
+        const res = await api.get("/admin/stats");
+        setTotalRecetas(res.data?.recetas?.total || 0);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchTotal();
+  }, []);
 
   const columns = useMemo(
     () => [
@@ -102,15 +116,13 @@ export default function AdminRecipes() {
           const recipe = info.row.original;
           return (
             <div className="flex items-center gap-2">
-              {recipe.imagen_id && (
                 <button
-                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
-                  title="Ver imagen"
+                  onClick={() => setVerReceta(recipe)}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-2.5 py-1.5 rounded text-xs font-medium transition-colors"
                 >
-                  <Image className="w-4 h-4" />
+                  Ver
                 </button>
-              )}
-<button
+                <button
                   onClick={() => {
                     if (confirm("¿Eliminar esta receta?")) {
                       api
@@ -119,10 +131,9 @@ export default function AdminRecipes() {
                         .catch(() => setError("No se pudo eliminar la receta"));
                     }
                   }}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
-                  title="Eliminar"
+                  className="bg-red-500 hover:bg-red-600 text-white px-2.5 py-1.5 rounded text-xs font-medium transition-colors"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  Eliminar
                 </button>
             </div>
           );
@@ -149,10 +160,10 @@ export default function AdminRecipes() {
 
   return (
     <div className="space-y-6">
+      <h1 className="text-2xl font-bold text-gray-900">Gestión de Recetas</h1>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Gestión de Recetas</h1>
-          <p className="text-gray-500 mt-1">{total} recetas totales</p>
+          <p className="text-gray-500">{totalRecetas} recetas totales</p>
         </div>
         <div className="flex items-center gap-4">
           <div className="relative">
@@ -205,7 +216,7 @@ export default function AdminRecipes() {
         </div>
       ) : (
         <div>
-          <div className="rounded-lg border border-gray-200 overflow-hidden">
+          <div className="rounded-lg border border-gray-200 overflow-hidden bg-white">
             <table className="w-full">
               <thead className="bg-gray-50">
                 {table.getHeaderGroups().map((headerGroup) => (
@@ -269,6 +280,38 @@ export default function AdminRecipes() {
                 className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
                 Siguiente
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {verReceta && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
+          onClick={() => setVerReceta(null)}
+        >
+          <div
+            className="bg-white rounded-xl p-6 shadow-lg max-w-2xl w-full max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              {verReceta.titulo || "Receta"}
+            </h3>
+            {verReceta.imagen_id && (
+              <img
+                src={`${import.meta.env.VITE_API_URL}/imagenes/${verReceta.imagen_id}`}
+                alt={verReceta.titulo || "Receta"}
+                className="w-full max-h-72 object-cover rounded-lg mb-4"
+              />
+            )}
+            <p className="text-sm text-gray-700 whitespace-pre-wrap">{verReceta.texto_receta}</p>
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => setVerReceta(null)}
+                className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Cerrar
               </button>
             </div>
           </div>
