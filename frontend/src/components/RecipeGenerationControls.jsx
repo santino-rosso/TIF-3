@@ -1,4 +1,5 @@
 import { createPortal } from "react-dom";
+import { AlertTriangle } from "lucide-react";
 
 const RecipeGenerationControls = ({ loading, errors, isFormValid, limitReached }) => (
   <>
@@ -13,15 +14,16 @@ const RecipeGenerationControls = ({ loading, errors, isFormValid, limitReached }
     )}
 
     {errors.length > 0 && (
-      <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg">
-        <div className="flex items-center mb-2">
-          <span className="ml-2 font-semibold">Error:</span>
-        </div>
-        <ul className="list-disc list-inside space-y-1">
+      <div
+        role="alert"
+        className="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg"
+      >
+        <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" aria-hidden="true" />
+        <div className="space-y-1">
           {errors.map((err, i) => (
-            <li key={i}>{err}</li>
+            <p key={i} className="text-sm">{err}</p>
           ))}
-        </ul>
+        </div>
       </div>
     )}
 

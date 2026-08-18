@@ -42,10 +42,9 @@ describe('SimilarRecipesSection', () => {
     expect(screen.getByText('Otras opciones que podrían interesarte')).toBeInTheDocument();
   });
 
-  it('renders Receta Alternativa 1 and Receta Alternativa 2', () => {
+  it('renders a Receta Alternativa card for each similar recipe', () => {
     renderSection();
-    expect(screen.getByText('Receta Alternativa 1')).toBeInTheDocument();
-    expect(screen.getByText('Receta Alternativa 2')).toBeInTheDocument();
+    expect(screen.getAllByText('Receta Alternativa')).toHaveLength(2);
   });
 
   it('calls onCookingMode with the recipe when clicking Modo Cocina', async () => {

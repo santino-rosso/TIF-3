@@ -21,7 +21,7 @@ export const CompletionCard = ({ recipe, titulo, onClose, onExit }) => {
           onClick={(e) => e.stopPropagation()}
         >
           <h3>¡Receta completada!</h3>
-          <p>¡Felicitaciones! Has terminado de cocinar {titulo}</p>
+          <p>Has terminado de cocinar {titulo}</p>
 
           {/* Mostrar imagen de la receta si existe */}
           {recipe.imagen_id && (

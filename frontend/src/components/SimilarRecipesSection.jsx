@@ -30,7 +30,7 @@ const SimilarRecipesSection = ({
               <div className="flex justify-between items-center">
                 <h4 className="text-lg font-semibold text-white flex items-center gap-2">
                   <Repeat className="w-6 h-6 text-white" />
-                  Receta Alternativa {idx + 1}
+                  Receta Alternativa
                 </h4>
                 <div className="flex gap-2">
                   <button

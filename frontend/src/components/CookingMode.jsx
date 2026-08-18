@@ -26,6 +26,7 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
   const wakeLockRef = useRef(null);
   const recognitionRef = useRef(null);
   const speechSynthesisRef = useRef(null);
+  const handleVoiceCommandRef = useRef(null);
   const isRecognitionActiveRef = useRef(false);
   const isListeningRef = useRef(false);
   const autoReadRef = useRef(true);
@@ -208,6 +209,13 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
     extractTimeFromStep,
     formatTime,
   } = useCookingTimer({ speak, currentStep });
+  const timerDisplayRef = useRef(null);
+
+  const scrollAlTimer = () => {
+    setTimeout(() => {
+      timerDisplayRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 150);
+  };
 const handleVoiceCommand = useCallback((command) => {
     console.log('Comando de voz:', command);
     console.log('Paso actual:', currentStepRef.current);
@@ -234,9 +242,31 @@ const handleVoiceCommand = useCallback((command) => {
     } else if (command.includes('repetir')) {
       speak(instructionsRef.current[currentStepRef.current]);
 
-    } else if (command.includes('iniciar') || command.includes('reiniciar')) {
+    } else if (command.includes('reiniciar')) {
       if (!hasTimer) {
         speak('No hay temporizador disponible para este paso');
+        return;
+      }
+      const hayTimerActivo = activeTimer === currentStepRef.current && timeLeft > 0;
+      if (!hayTimerActivo) {
+        speak('No hay temporizador para reiniciar');
+        return;
+      }
+      const seconds = suggestedTime * 60;
+      setTimeLeft(seconds);
+      setActiveTimer(currentStepRef.current);
+      setIsTimerRunning(true);
+      speak(`Temporizador reiniciado por ${suggestedTime} minutos`);
+      scrollAlTimer();
+
+    } else if (command.includes('iniciar')) {
+      if (!hasTimer) {
+        speak('No hay temporizador disponible para este paso');
+        return;
+      }
+      const hayTimerActivo = activeTimer === currentStepRef.current && timeLeft > 0;
+      if (hayTimerActivo) {
+        speak(isTimerRunningRef.current ? 'El temporizador ya está en marcha' : 'El temporizador está pausado, decí reanudar');
         return;
       }
       const seconds = suggestedTime * 60;
@@ -244,21 +274,31 @@ const handleVoiceCommand = useCallback((command) => {
       setActiveTimer(currentStepRef.current);
       setIsTimerRunning(true);
       speak(`Temporizador iniciado por ${suggestedTime} minutos`);
+      scrollAlTimer();
 
-    } else if (command.includes('pausar') || command.includes('reanudar')) {
-      if (!hasTimer) {
-        speak('No hay temporizador disponible para este paso');
+    } else if (command.includes('pausar')) {
+      const hayTimerCorriendo = activeTimer === currentStepRef.current && isTimerRunningRef.current && timeLeft > 0;
+      if (!hayTimerCorriendo) {
+        speak('No hay un temporizador en marcha para pausar');
         return;
       }
-      const wasRunning = isTimerRunningRef.current;
       pauseTimer();
-      if (wasRunning) {
-        speak('Temporizador pausado');
-      } else {
-        speak('Temporizador reanudado');
+      speak('Temporizador pausado');
+
+    } else if (command.includes('reanudar')) {
+      const hayTimerPausado = activeTimer === currentStepRef.current && !isTimerRunningRef.current && timeLeft > 0;
+      if (!hayTimerPausado) {
+        speak('No hay un temporizador pausado para reanudar');
+        return;
       }
+      pauseTimer();
+      speak('Temporizador reanudado');
     }
-  }, [extractTimeFromStep, isTimerRunningRef, pauseTimer, resetTimer, setActiveTimer, setIsTimerRunning, setTimeLeft, speak]);
+  }, [activeTimer, extractTimeFromStep, isTimerRunningRef, pauseTimer, resetTimer, setActiveTimer, setIsTimerRunning, setTimeLeft, speak, timeLeft]);
+
+  // Ref estable para el handler de comandos: el reconocimiento de voz se configura
+  // una sola vez y no debe re-crearse cuando el timer actualiza el estado cada segundo
+  handleVoiceCommandRef.current = handleVoiceCommand;
 
   const toggleVoiceRecognition = () => {
     if (!voiceSupported) {
@@ -308,6 +348,19 @@ const handleVoiceCommand = useCallback((command) => {
     }
   };
 
+  // Desactivar micrófono y leer la tarjeta cuando se muestra la receta completada
+  useEffect(() => {
+    if (showCompletion) {
+      setIsListening(false);
+      stopRecognition();
+      if (autoReadRef.current) {
+        setTimeout(() => {
+          speak(`¡Receta completada! Has terminado de cocinar ${titulo}`);
+        }, 300);
+      }
+    }
+  }, [showCompletion, stopRecognition, speak, titulo]);
+
   // Configurar reconocimiento de voz
   useEffect(() => {
     if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
@@ -353,7 +406,7 @@ const handleVoiceCommand = useCallback((command) => {
       recognitionRef.current.onresult = (event) => {
         const command = event.results[event.results.length - 1][0].transcript.toLowerCase();
         console.log('Comando detectado:', command);
-        handleVoiceCommand(command);
+        handleVoiceCommandRef.current?.(command);
       };
 
       setVoiceSupported(true);
@@ -370,7 +423,7 @@ const handleVoiceCommand = useCallback((command) => {
         isRecognitionActiveRef.current = false;
       }
     };
-  }, [handleVoiceCommand, startRecognition]);
+  }, [startRecognition]);
 
   // Lectura automática solo cuando cambia el paso
   useEffect(() => {
@@ -439,7 +492,10 @@ const handleVoiceCommand = useCallback((command) => {
               <Clock size={16} />
               Tiempo: {suggestedTime} {suggestedTime>1? "minutos": "minuto"}
               <button
-                onClick={() => startTimer(suggestedTime)}
+                onClick={() => {
+                  startTimer(suggestedTime);
+                  scrollAlTimer();
+                }}
                 className="btn-timer-start"
               >
                 Iniciar temporizador
@@ -464,7 +520,7 @@ const handleVoiceCommand = useCallback((command) => {
         </div>
 
         {activeTimer === currentStep && (
-          <div className="timer-display">
+          <div className="timer-display" ref={timerDisplayRef}>
             <div className="timer-circle">
               <div className="timer-time">{formatTime(timeLeft)}</div>
             </div>
@@ -504,8 +560,14 @@ const handleVoiceCommand = useCallback((command) => {
         <CompletionCard
           recipe={recipe}
           titulo={titulo}
-          onClose={() => setShowCompletion(false)}
-          onExit={onExit}
+          onClose={() => {
+            speechSynthesisRef.current?.cancel();
+            setShowCompletion(false);
+          }}
+          onExit={() => {
+            speechSynthesisRef.current?.cancel();
+            onExit();
+          }}
         />
       )}
     </div>

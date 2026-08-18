@@ -88,7 +88,11 @@
 }
 
 .speak-btn.auto-read-active {
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: #22c55e;
+}
+
+.speak-btn.auto-read-active:hover {
+  background: #16a34a;
 }
 
 @keyframes pulse {
@@ -197,7 +201,7 @@
 }
 
 .btn-timer-start {
-  background: linear-gradient(135deg, #4ade80, #22c55e);
+  background: #22c55e;
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -206,13 +210,10 @@
   cursor: pointer;
   font-weight: 600;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 16px rgba(74, 222, 128, 0.3);
 }
 
 .btn-timer-start:hover {
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(74, 222, 128, 0.4);
+  background: #16a34a;
 }
 
 .voice-commands {
@@ -307,8 +308,6 @@
 
 .timer-btn:hover {
   background: rgba(255, 255, 255, 0.3);
-  transform: scale(1.1);
-  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.2);
 }
 
 .step-actions {
@@ -430,7 +429,6 @@
   padding: 2rem;
   border-radius: 1rem;
   text-align: center;
-  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
   max-width: 500px;
   margin: 2rem auto;
   position: fixed;
@@ -478,6 +476,7 @@
   font-size: 1.1rem;
   margin-bottom: 1.5rem;
   opacity: 0.95;
+  text-wrap: balance;
 }
 
 .btn-finish {
@@ -547,6 +546,7 @@
   
   .completion-card p {
     font-size: 1rem;
+    text-wrap: balance;
   }
 
   .completion-actions {

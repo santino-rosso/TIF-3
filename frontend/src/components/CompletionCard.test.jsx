@@ -24,7 +24,7 @@ describe('CompletionCard', () => {
 
     expect(screen.getByText('¡Receta completada!')).toBeInTheDocument();
     expect(
-      screen.getByText('¡Felicitaciones! Has terminado de cocinar Arroz con tomate')
+      screen.getByText('Has terminado de cocinar Arroz con tomate')
     ).toBeInTheDocument();
   });
 

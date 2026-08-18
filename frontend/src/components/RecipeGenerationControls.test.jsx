@@ -12,7 +12,7 @@ describe('RecipeGenerationControls', () => {
       />
     );
 
-    expect(screen.getByText('Error:')).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toBeInTheDocument();
     expect(screen.getByText('Debes subir una imagen de los ingredientes.')).toBeInTheDocument();
     expect(screen.getByText('Otro error')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /generar receta/i })).toBeDisabled();
