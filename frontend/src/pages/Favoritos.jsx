@@ -39,7 +39,7 @@ const Favoritos = () => {
         <div className="max-w-2xl mx-auto py-16 px-4 flex flex-col items-center justify-center">
           <h2 className="text-3xl font-bold text-green-700 mb-4 text-center">Tus Recetas Favoritas</h2>
           <EmptyState
-            message="Aún no tenés recetas guardadas."
+            message="Aún no tenés recetas guardadas"
             imageAlt="Sin favoritos"
             className="flex flex-col items-center justify-center"
             messageClassName="text-lg text-gray-600 mb-8 text-center"
