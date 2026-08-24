@@ -27,12 +27,12 @@ const SimilarRecipesSection = ({
           <div key={idx} className="receta-card bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 border border-gray-100">
             {/* Header de receta similar */}
             <div className="bg-green-500 px-5 py-3 rounded-t-xl">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 sm:gap-0">
                 <h4 className="text-lg font-semibold text-white flex items-center gap-2">
                   <Repeat className="w-6 h-6 text-white" />
                   Receta Alternativa
                 </h4>
-                <div className="flex gap-2">
+                <div className="flex gap-2 shrink-0">
                   <button
                     onClick={() => onCookingMode(rec)}
                     className="flex items-center gap-1 px-3 py-1 rounded-md text-sm font-medium transition-all bg-blue-500 hover:bg-blue-600 text-white"

@@ -32,7 +32,7 @@ const RecipeMainHeader = ({ tipo = "generada", isSaved, onCookingMode, onToggleF
             </>
           )}
         </div>
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-row gap-3">
           <button
             onClick={onCookingMode}
             className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all bg-blue-500 hover:bg-blue-600 text-white"

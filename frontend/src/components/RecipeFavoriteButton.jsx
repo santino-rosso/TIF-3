@@ -13,11 +13,15 @@ export const RecipeFavoriteButton = ({ isSaved, onClick, variant = 'main' }) => 
     return (
       <button
         onClick={onClick}
+        aria-label={isSaved ? 'Quitar' : 'Guardar'}
         className={`flex items-center gap-1 px-3 py-1 rounded-md text-sm font-medium transition-all ${savedClasses}`}
       >
         <HeartIcon isSaved={isSaved} className="w-4 h-4" />
         <span className="hidden sm:inline">
           {isSaved ? 'Guardada' : 'Guardar'}
+        </span>
+        <span className="sm:hidden">
+          {isSaved ? 'Quitar' : 'Guardar'}
         </span>
       </button>
     );
