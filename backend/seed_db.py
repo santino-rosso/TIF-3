@@ -15,10 +15,12 @@ import random
 import sys
 from datetime import datetime, timedelta, timezone
 
+import os
+
 from passlib.context import CryptContext
 from pymongo import MongoClient
 
-MONGO_URI = "mongodb://localhost:27017"
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 DB_NAME = "receya_db"
 EMBEDDING_DIMS = 768
 

@@ -24,6 +24,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar el código de la aplicación
 COPY app ./app
+COPY seed_db.py ./
 
 # Garantizar la propiedad para usuarios que no sean root.
 RUN chown -R appuser:app /app

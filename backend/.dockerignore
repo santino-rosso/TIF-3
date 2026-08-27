@@ -43,6 +43,5 @@ Dockerfile
 .dockerignore
 
 # Project specific
-seed_db.py
 tests/
 *.log
