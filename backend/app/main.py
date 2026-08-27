@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 from app.routers.receta_routes import router as receta_router
 from app.routers.user_routes import router as user_router
@@ -11,6 +12,7 @@ from app.db.plan_repository import inicializar_planes
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.rate_limit import limiter, RateLimitExceededError, rate_limit_exceeded_handler
+import app.db.mongo_client as mongo_client
 
 
 @asynccontextmanager
@@ -38,6 +40,35 @@ async def lifespan(app: FastAPI):
     print("Conexión a la base de datos cerrada.")
 
 app = FastAPI(title="API de Recetas con Gemini", lifespan=lifespan)
+
+# ---------------------------------------------------------------------------
+# Sondas de salud/preparación.
+# ---------------------------------------------------------------------------
+
+@app.get("/health", tags=["Health"])
+@app.get("/api/health", tags=["Health"])
+async def health_check():
+    """Sonda de salud. Devuelve un código 200 si el proceso está en ejecución."""
+    return {"status": "ok"}
+
+
+@app.get("/ready", tags=["Health"])
+@app.get("/api/ready", tags=["Health"])
+async def readiness_check():
+    """Sonda de preparación. 200 si la base de datos es accesible, 503 en caso contrario."""
+    try:
+        if mongo_client.client is None or mongo_client.db is None:
+            return JSONResponse(
+                status_code=503,
+                content={"status": "not_ready", "detail": "database not connected"},
+            )
+        await mongo_client.client.admin.command("ping")
+        return {"status": "ready"}
+    except Exception as exc: 
+        return JSONResponse(
+            status_code=503,
+            content={"status": "not_ready", "detail": str(exc)},
+        )
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceededError, rate_limit_exceeded_handler)
