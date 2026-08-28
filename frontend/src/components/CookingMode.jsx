@@ -115,10 +115,8 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
       try {
         if ('wakeLock' in navigator) {
           wakeLockRef.current = await navigator.wakeLock.request('screen');
-          console.log('Wake Lock activado - pantalla permanecerá encendida');
         }
       } catch (err) {
-        console.log('Wake Lock no disponible:', err);
       }
     };
 
@@ -127,7 +125,6 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
     return () => {
       if (wakeLockRef.current) {
         wakeLockRef.current.release();
-        console.log('Wake Lock liberado');
       }
     };
   }, []);
@@ -137,7 +134,6 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
 
     try {
       recognitionRef.current.start();
-      console.log('Intentando iniciar reconocimiento...');
     } catch (error) {
       console.error('Error al iniciar reconocimiento:', error);
       setIsListening(false);
@@ -150,7 +146,6 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
 
     try {
       recognitionRef.current.stop();
-      console.log('Deteniendo reconocimiento...');
     } catch (error) {
       console.error('Error al detener reconocimiento:', error);
     }
@@ -217,8 +212,6 @@ const CookingMode = ({ recipe, titulo, onExit }) => {
     }, 150);
   };
 const handleVoiceCommand = useCallback((command) => {
-    console.log('Comando de voz:', command);
-    console.log('Paso actual:', currentStepRef.current);
 
     // Obtener tiempo sugerido del paso actual
     const currentInstruction = instructionsRef.current[currentStepRef.current];
@@ -302,7 +295,6 @@ const handleVoiceCommand = useCallback((command) => {
 
   const toggleVoiceRecognition = () => {
     if (!voiceSupported) {
-      console.log('Reconocimiento de voz no soportado');
       return;
     }
 
@@ -371,13 +363,11 @@ const handleVoiceCommand = useCallback((command) => {
       recognitionRef.current.lang = 'es-ES';
 
       recognitionRef.current.onstart = () => {
-        console.log('Reconocimiento de voz iniciado');
         isRecognitionActiveRef.current = true;
         setIsListening(true);
       };
 
       recognitionRef.current.onend = () => {
-        console.log('Reconocimiento de voz terminado');
         isRecognitionActiveRef.current = false;
         // Solo reiniciar si el usuario quiere seguir escuchando
         if (isListeningRef.current) {
@@ -399,13 +389,11 @@ const handleVoiceCommand = useCallback((command) => {
         if (event.error === 'not-allowed') {
           alert('Permisos de micrófono denegados. Por favor, permite el acceso al micrófono.');
         } else if (event.error === 'no-speech') {
-          console.log('No se detectó habla, reintentando...');
         }
       };
 
       recognitionRef.current.onresult = (event) => {
         const command = event.results[event.results.length - 1][0].transcript.toLowerCase();
-        console.log('Comando detectado:', command);
         handleVoiceCommandRef.current?.(command);
       };
 

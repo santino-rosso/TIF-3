@@ -33,12 +33,13 @@ def test_actualizar_plan_rechaza_premium_sin_actualizar_usuario(monkeypatch):
         plan_routes.actualizar_plan(
             TipoPlan.PREMIUM.value,
             current_user={"email": "user@example.com"},
+            payment_data=None,
         )
     )
 
-    assert response.status_code == 403
+    assert response.status_code == 400
     assert response_json(response) == {
-        "error": "No se permite actualizar a premium desde este endpoint"
+        "error": "Se requieren datos de tarjeta para actualizar a Premium"
     }
 
 
@@ -103,7 +104,7 @@ def test_actualizar_plan_permite_gratuito_usando_helper_compartido(monkeypatch):
 
     assert response["mensaje"] == "Plan actualizado a gratuito exitosamente"
     assert response["plan"]["tipo_plan"] == TipoPlan.GRATUITO.value
-    assert response["plan"] == helper_plan.dict()
+    assert response["plan"] == helper_plan.model_dump()
     assert created == [TipoPlan.GRATUITO]
     assert len(updates) == 1
     assert updates[0][0] == "user@example.com"

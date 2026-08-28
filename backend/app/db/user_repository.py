@@ -21,7 +21,7 @@ async def create_user(email: str, hashed_password: str):
         "is_admin": False,
         "is_active": True,
         "favoritos": [],
-        "plan": plan_usuario.dict(),
+        "plan": plan_usuario.model_dump(),
         "creado_en": ahora
     })
 
@@ -88,7 +88,7 @@ async def obtener_plan_usuario(email: str) -> Optional[PlanUsuario]:
         plan_usuario = await crear_plan_usuario(TipoPlan.GRATUITO)
         await usuarios_collection.update_one(
             {"email": email},
-            {"$set": {"plan": plan_usuario.dict()}}
+            {"$set": {"plan": plan_usuario.model_dump()}}
         )
         return await sincronizar_generaciones_plan(email, await obtener_plan_guardado(email, plan_usuario))
 
@@ -100,7 +100,7 @@ async def obtener_plan_usuario(email: str) -> Optional[PlanUsuario]:
         plan_usuario = await crear_plan_usuario(plan_usuario.tipo_plan)
         await usuarios_collection.update_one(
             {"email": email},
-            {"$set": {"plan": plan_usuario.dict()}}
+            {"$set": {"plan": plan_usuario.model_dump()}}
         )
         return await obtener_plan_guardado(email, plan_usuario)
 
@@ -109,7 +109,7 @@ async def obtener_plan_usuario(email: str) -> Optional[PlanUsuario]:
 async def actualizar_plan_usuario(email: str, plan: PlanUsuario):
     return await usuarios_collection.update_one(
         {"email": email},
-        {"$set": {"plan": plan.dict()}}
+        {"$set": {"plan": plan.model_dump()}}
     )
 
 async def reservar_generacion_plan(email: str, plan_usuario: PlanUsuario, limite: int) -> bool:

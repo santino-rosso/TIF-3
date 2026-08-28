@@ -27,7 +27,7 @@ async def inicializar_planes():
     for plan in PLANES_DISPONIBLES.values():
         await planes_collection.update_one(
             {"tipo": plan.tipo},
-            {"$set": plan.dict()},
+            {"$set": plan.model_dump()},
             upsert=True
         )
 
@@ -54,7 +54,7 @@ async def registrar_generacion(email: str, receta_id: Optional[str] = None):
         fecha_generacion=datetime.now(timezone.utc),
         receta_id=receta_id
     )
-    await generaciones_collection.insert_one(generacion.dict())
+    await generaciones_collection.insert_one(generacion.model_dump())
 
 def normalizar_datetime_utc(fecha: datetime) -> datetime:
     if fecha.tzinfo is None:

@@ -59,7 +59,7 @@ def test_obtener_planes_endpoint_usa_planes_canonicos(monkeypatch):
     response = asyncio.run(plan_routes.obtener_planes())
 
     assert response == {
-        "planes": [plan.dict() for plan in plan_repository.PLANES_DISPONIBLES.values()]
+        "planes": [plan.model_dump() for plan in plan_repository.PLANES_DISPONIBLES.values()]
     }
 
 
@@ -70,6 +70,6 @@ def test_inicializar_planes_upserta_planes_canonicos(monkeypatch):
     asyncio.run(plan_repository.inicializar_planes())
 
     assert fake_collection.updates == [
-        ({"tipo": plan.tipo}, {"$set": plan.dict()}, True)
+        ({"tipo": plan.tipo}, {"$set": plan.model_dump()}, True)
         for plan in plan_repository.PLANES_DISPONIBLES.values()
     ]

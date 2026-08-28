@@ -11,6 +11,7 @@ import {
 } from "@tanstack/react-table";
 import { Search, ChevronUp, ChevronDown } from "lucide-react";
 import api from "../utils/axiosInstance";
+import { API_BASE_URL } from "../utils/apiConfig";
 import { formatearReceta } from "../utils/recipeFormatter";
 
 const columnHelper = createColumnHelper();
@@ -79,7 +80,7 @@ export default function AdminRecipes() {
           if (recipe.imagen_id) {
             return (
               <img
-                src={`${import.meta.env.VITE_API_URL}/imagenes/${recipe.imagen_id}`}
+                src={`${API_BASE_URL}/imagenes/${recipe.imagen_id}`}
                 alt={recipe.titulo || "Receta"}
                 className="w-16 h-16 object-cover rounded-lg"
               />
@@ -312,7 +313,7 @@ export default function AdminRecipes() {
             >
               {verReceta.imagen_id && (
                 <img
-                  src={`${import.meta.env.VITE_API_URL}/imagenes/${verReceta.imagen_id}`}
+                  src={`${API_BASE_URL}/imagenes/${verReceta.imagen_id}`}
                   alt={verReceta.titulo || "Receta"}
                   className="w-full max-h-72 object-cover rounded-lg mb-4"
                 />

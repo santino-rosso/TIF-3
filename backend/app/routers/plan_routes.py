@@ -13,7 +13,7 @@ router = APIRouter()
 @router.get("/planes")
 async def obtener_planes():
     planes = await obtener_todos_los_planes()
-    return {"planes": [plan.dict() for plan in planes]}
+    return {"planes": [plan.model_dump() for plan in planes]}
 
 @router.get("/obtener-plan")
 async def obtener_mi_plan(current_user: dict = Depends(get_current_user)):
@@ -28,7 +28,7 @@ async def obtener_mi_plan(current_user: dict = Depends(get_current_user)):
         estadisticas = await obtener_estadisticas_usuario(current_user["email"], plan_usuario)
         
         return {
-            "plan": plan_usuario.dict(),
+            "plan": plan_usuario.model_dump(),
             "estadisticas": estadisticas
         }
     except Exception as e:
@@ -93,7 +93,7 @@ async def actualizar_plan(
         if result.modified_count == 1:
             return {
                 "mensaje": f"Plan actualizado a {plan_tipo.value} exitosamente",
-                "plan": nuevo_plan.dict()
+                "plan": nuevo_plan.model_dump()
             }
         else:
             return JSONResponse(
